@@ -1,0 +1,90 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Il tuo Carrello - UnifiStore{% endblock %}
+
+{% block content %}
+<div class="cart-page-container">
+    <h1 class="section-title">Il tuo Carrello</h1>
+    <p class="section-desc">Rivedi gli articoli aggiunti prima di procedere all'acquisto</p>
+    
+    {% if cart %}
+        <div class="cart-layout">
+            <!-- Tabella/Lista Articoli -->
+            <div class="cart-items-wrapper">
+                {% for item in cart %}
+                    {% with product=item.product %}
+                        <div class="cart-item-card">
+                            <div class="cart-item-image">
+                                <img src="{{ product.image_url }}" alt="{{ product.name }}">
+                            </div>
+                            <div class="cart-item-details">
+                                <h3 class="cart-item-title">
+                                    <a href="{% url 'shop:product_detail' product.id %}">{{ product.name }}</a>
+                                </h3>
+                                <div class="cart-item-meta">
+                                    <span class="cart-item-price">&euro;{{ item.price }} cad.</span>
+                                </div>
+                            </div>
+                            <!-- Form di aggiornamento quantità -->
+                            <div class="cart-item-quantity">
+                                <form action="{% url 'shop:cart_add' product.id %}" method="post" class="quantity-form">
+                                    {% csrf_token %}
+                                    {{ item.update_quantity_form.quantity }}
+                                    {{ item.update_quantity_form.override }}
+                                    <button type="submit" class="btn btn-secondary btn-update">Aggiorna</button>
+                                </form>
+                            </div>
+                            <div class="cart-item-total">
+                                <span>&euro;{{ item.total_price }}</span>
+                            </div>
+                            <!-- Rimuovi -->
+                            <div class="cart-item-remove">
+                                <form action="{% url 'shop:cart_remove' product.id %}" method="post">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-remove" title="Rimuovi dal carrello">&times;</button>
+                                </form>
+                            </div>
+                        </div>
+                    {% endwith %}
+                {% endfor %}
+            </div>
+            
+            <!-- Sidebar Riepilogo Ordine -->
+            <div class="cart-summary-sidebar">
+                <div class="summary-card">
+                    <h3 class="summary-title">Riepilogo Ordine</h3>
+                    
+                    <div class="summary-row">
+                        <span>Prodotti totali:</span>
+                        <strong>{{ cart.get_total_items }}</strong>
+                    </div>
+                    
+                    <div class="summary-row total-row">
+                        <span>Totale complessivo:</span>
+                        <span class="price-highlight">&euro;{{ cart.get_total_price }}</span>
+                    </div>
+                    
+                    {% if user.is_authenticated %}
+                        <a href="#" class="btn btn-primary checkout-btn">Procedi al Pagamento</a>
+                    {% else %}
+                        <div class="checkout-login-warning">
+                            <p>Per completare l'ordine devi effettuare l'accesso.</p>
+                            <a href="{% url 'login' %}?next={% url 'shop:cart_detail' %}" class="btn btn-secondary checkout-login-btn">Accedi per ordinare</a>
+                        </div>
+                    {% endif %}
+                    
+                    <a href="{% url 'shop:product_list' %}" class="btn btn-link">Continua lo Shopping</a>
+                </div>
+            </div>
+        </div>
+    {% else %}
+        <div class="empty-cart-container">
+            <div class="empty-cart-icon">🛒</div>
+            <h2>Il tuo carrello è vuoto</h2>
+            <p>Non hai ancora aggiunto nessun prodotto al tuo carrello. Esplora il nostro catalogo!</p>
+            <a href="{% url 'shop:product_list' %}" class="btn btn-primary">Vai al Catalogo</a>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

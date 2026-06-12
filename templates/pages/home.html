@@ -1,0 +1,42 @@
+{% extends 'base.html' %}
+
+{% block title %}Benvenuto su UnifiStore{% endblock %}
+
+{% block content %}
+<div class="hero">
+    <h1>Benvenuto su UnifiStore</h1>
+    <p>Il nuovo e-commerce premium per lo shopping online veloce, sicuro ed elegante.</p>
+    <a href="{% url 'shop:product_list' %}" class="btn btn-primary">Esplora il Catalogo</a>
+</div>
+
+<div class="showcase">
+    <h2 class="section-title">Articoli in Evidenza</h2>
+    <p class="section-desc">Dai un'occhiata alle novità e ai prodotti più popolari del momento.</p>
+    
+    {% if products %}
+        <div class="grid">
+            {% for product in products %}
+                <div class="card">
+                    {% if product.image_url %}
+                        <img src="{{ product.image_url }}" alt="{{ product.name }}" class="card-img">
+                    {% else %}
+                        <div class="card-img" style="display: flex; align-items: center; justify-content: center; color: #9ca3af;">No Image</div>
+                    {% endif %}
+                    <div class="card-body">
+                        <h3 class="card-title">{{ product.name }}</h3>
+                        <p class="card-text">{{ product.description|truncatewords:15 }}</p>
+                        <div class="card-footer">
+                            <span class="price">€{{ product.price }}</span>
+                            <a href="{% url 'shop:product_detail' product.id %}" class="btn btn-secondary btn-sm">Dettagli</a>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <p style="color: #6b7280; text-align: center; padding: 2rem; border: 1px dashed #e5e7eb; border-radius: 8px;">
+            Nessun prodotto disponibile al momento. Accedi all'admin per caricarne qualcuno!
+        </p>
+    {% endif %}
+</div>
+{% endblock %}

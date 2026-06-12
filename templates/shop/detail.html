@@ -1,0 +1,54 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ product.name }} - UnifiStore{% endblock %}
+
+{% block content %}
+<a href="{% url 'shop:product_list' %}" class="back-btn">&larr; Torna al Catalogo</a>
+
+<div class="detail-container">
+    <div class="detail-img-wrapper">
+        {% if product.image_url %}
+            <img src="{{ product.image_url }}" alt="{{ product.name }}" class="detail-img">
+        {% else %}
+            <div style="display: flex; align-items: center; justify-content: center; height: 100%; color: #9ca3af; background-color: #f3f4f6;">Nessuna immagine</div>
+        {% endif %}
+    </div>
+
+    <div class="detail-info">
+        <div>
+            <h1 class="product-title">{{ product.name }}</h1>
+            
+            <div class="product-meta">
+                {% if product.stock > 0 %}
+                    <span class="stock-status in-stock">Disponibile ({{ product.stock }} pezzi)</span>
+                {% else %}
+                    <span class="stock-status out-of-stock">Esaurito</span>
+                {% endif %}
+                
+                {% for cat in product.categories.all %}
+                    <span class="badge">{{ cat.name }}</span>
+                {% endfor %}
+            </div>
+
+            <p class="product-desc">{{ product.description|default:"Nessuna descrizione disponibile per questo prodotto." }}</p>
+        </div>
+
+        <div class="detail-footer">
+            <div class="price-tag">€{{ product.price }}</div>
+            {% if product.stock > 0 %}
+                <form action="{% url 'shop:cart_add' product.id %}" method="post" class="add-to-cart-form" style="display: flex; gap: 1rem; align-items: center; width: 100%;">
+                    {% csrf_token %}
+                    <div style="display: flex; flex-direction: column; gap: 0.25rem;">
+                        <label for="{{ cart_product_form.quantity.id_for_label }}" style="font-size: 0.85rem; font-weight: 600; color: #4b5563;">Quantità</label>
+                        {{ cart_product_form.quantity }}
+                    </div>
+                    {{ cart_product_form.override }}
+                    <button type="submit" class="btn btn-primary" style="flex: 1; height: 45px; margin-top: 1.15rem;">Aggiungi al Carrello</button>
+                </form>
+            {% else %}
+                <button class="btn btn-secondary" style="width: 100%; cursor: not-allowed;" disabled>Non Disponibile</button>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

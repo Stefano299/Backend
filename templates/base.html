@@ -1,0 +1,50 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}UnifiStore{% endblock %}</title>
+    
+    <!-- Google Font -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Foglio di Stile Separato -->
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+</head>
+<body>
+
+    <nav>
+        <a href="/" class="logo">UnifiStore</a>
+        <div class="nav-links">
+            <a href="/">Home</a>
+            <a href="{% url 'shop:product_list' %}">Catalogo</a>
+            {% if user.is_authenticated %}
+                <span class="user-greeting">Ciao, <strong>{{ user.username }}</strong></span>
+                {% if user.is_staff %}
+                    <a href="/admin/" target="_blank">Admin Panel</a>
+                {% endif %}
+                <form action="{% url 'logout' %}" method="post" style="display: inline;">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-secondary" style="padding: 0.3rem 0.8rem; font-size: 0.85rem;">Esci</button>
+                </form>
+            {% else %}
+                <a href="{% url 'login' %}">Accedi</a>
+                <a href="{% url 'signup' %}" class="btn btn-primary" style="padding: 0.3rem 0.8rem; font-size: 0.85rem; color: #ffffff;">Registrati</a>
+            {% endif %}
+        </div>
+    </nav>
+
+    <main>
+        {% block content %}
+        {% endblock %}
+    </main>
+
+    <footer>
+        <p>&copy; 2026 UnifiStore. Progetto Esercitazione Back-end.</p>
+    </footer>
+
+</body>
+</html>

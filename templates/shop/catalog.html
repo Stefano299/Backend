@@ -1,0 +1,92 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Catalogo Prodotti - UnifiStore{% endblock %}
+
+{% block content %}
+<div class="catalog-header" style="margin-bottom: 2rem;">
+    <h1>Catalogo Prodotti</h1>
+    <p style="color: #6b7280;">Esplora i prodotti del nostro negozio ed effettua ricerche mirate.</p>
+</div>
+
+<div class="catalog-layout">
+    <!-- Barra dei Filtri a Sinistra -->
+    <aside class="sidebar">
+        <form method="GET" action="">
+            <!-- Gruppo 1: Ricerca Testo -->
+            <div class="filter-group">
+                <label for="search">Cerca</label>
+                <input type="text" name="q" id="search" placeholder="Nome del prodotto..." class="form-control" value="{{ search_query|default:'' }}">
+            </div>
+
+            <!-- Gruppo 2: Categorie Selezionabili -->
+            <div class="filter-group">
+                <label>Categorie</label>
+                <div class="category-filters">
+                    <label class="category-option">
+                        <input type="radio" name="category" value="" {% if not selected_category %}checked{% endif %}>
+                        Tutte le Categorie
+                    </label>
+                    {% for cat in categories %}
+                        <label class="category-option">
+                            <input type="radio" name="category" value="{{ cat.id }}" {% if selected_category == cat.id|slugify or selected_category == cat.id %}checked{% endif %}>
+                            {{ cat.name }}
+                        </label>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Gruppo 3: Range di Prezzo (Due Pallini sulla Stessa Linea) -->
+            <div class="filter-group">
+                <label>Prezzo: <span id="price-range-display" style="font-weight: 700; color: #4f46e5;">€{{ min_price|default:0 }} - €{{ max_price|default:max_limit }}</span></label>
+                <div class="double-slider-container">
+                    <div class="slider-track"></div>
+                    <input type="range" name="min_price" id="min-price-slider" min="0" max="{{ max_limit }}" value="{{ min_price|default:0 }}" class="double-slider">
+                    <input type="range" name="max_price" id="max-price-slider" min="0" max="{{ max_limit }}" value="{{ max_price|default:max_limit }}" class="double-slider">
+                </div>
+            </div>
+
+            <!-- Pulsanti Azione -->
+            <button type="submit" class="btn btn-primary" style="width: 100%; margin-bottom: 0.5rem;">Filtra</button>
+            
+            {% if search_query or selected_category or min_price or max_price %}
+                <a href="{% url 'shop:product_list' %}" class="btn btn-secondary" style="width: 100%; text-align: center;">Azzera Filtri</a>
+            {% endif %}
+        </form>
+    </aside>
+
+    <script src="{% static 'js/slider.js' %}"></script>
+
+    <!-- Elenco dei Prodotti a Destra -->
+    <section class="catalog-main">
+        <p class="results-count">Prodotti trovati: {{ products|length }}</p>
+
+        {% if products %}
+            <div class="grid">
+                {% for product in products %}
+                    <div class="card">
+                        {% if product.image_url %}
+                            <img src="{{ product.image_url }}" alt="{{ product.name }}" class="card-img">
+                        {% else %}
+                            <div class="card-img" style="display: flex; align-items: center; justify-content: center; color: #9ca3af; background-color: #f3f4f6;">No Image</div>
+                        {% endif %}
+                        <div class="card-body">
+                            <h3 class="card-title">{{ product.name }}</h3>
+                            <p class="card-text">{{ product.description|truncatewords:15 }}</p>
+                            <div class="card-footer">
+                                <span class="price">€{{ product.price }}</span>
+                                <a href="{% url 'shop:product_detail' product.id %}" class="btn btn-secondary btn-sm">Dettagli</a>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div style="color: #6b7280; text-align: center; padding: 4rem; border: 1px dashed #e5e7eb; border-radius: 10px; background-color: #ffffff;">
+                <p style="font-size: 1.1rem; margin-bottom: 0.5rem;">Nessun prodotto trovato.</p>
+                <p style="font-size: 0.9rem; color: #9ca3af;">Prova a modificare i filtri o i termini di ricerca.</p>
+            </div>
+        {% endif %}
+    </section>
+</div>
+{% endblock %}

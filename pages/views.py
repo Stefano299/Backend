@@ -1,5 +1,7 @@
-from django.http import HttpResponse
+from django.shortcuts import render
+from shop.models import Product
 
-# Create your views here.
 def homePageView(request):
-    return HttpResponse("Hello, World!")
+    featured_products = Product.objects.all()[:3]
+    return render(request, "pages/home.html", {"products": featured_products})
+

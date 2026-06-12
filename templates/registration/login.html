@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+
+{% block title %}Accedi - UnifiStore{% endblock %}
+
+{% block content %}
+<div class="auth-container">
+    <div class="auth-card">
+        <h2 class="auth-title">Accedi al tuo Account</h2>
+        <p class="auth-subtitle">Inserisci le tue credenziali per continuare</p>
+        
+        {% if form.errors %}
+            <div class="auth-error-box">
+                <p>Username o password non corretti. Riprova.</p>
+            </div>
+        {% endif %}
+        
+        <form method="post" class="auth-form">
+            {% csrf_token %}
+            
+            <div class="form-group">
+                <label for="{{ form.username.id_for_label }}">Nome Utente</label>
+                {{ form.username }}
+            </div>
+            
+            <div class="form-group">
+                <label for="{{ form.password.id_for_label }}">Password</label>
+                {{ form.password }}
+            </div>
+            
+            <input type="hidden" name="next" value="{{ next }}">
+            
+            <button type="submit" class="btn btn-primary auth-submit-btn">Entra</button>
+        </form>
+        
+        <div class="auth-footer-links">
+            Non hai ancora un account? <a href="{% url 'signup' %}">Registrati ora</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

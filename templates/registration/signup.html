@@ -1,0 +1,48 @@
+{% extends 'base.html' %}
+
+{% block title %}Registrazione - UnifiStore{% endblock %}
+
+{% block content %}
+<div class="auth-container">
+    <div class="auth-card">
+        <h2 class="auth-title">Crea un Account</h2>
+        <p class="auth-subtitle">Compila i campi seguenti per registrarti</p>
+        
+        {% if form.errors %}
+            <div class="auth-error-box">
+                <p>Si sono verificati degli errori durante la registrazione. Ricontrolla i dati inseriti.</p>
+                <ul>
+                    {% for field in form %}
+                        {% for error in field.errors %}
+                            <li><strong>{{ field.label }}:</strong> {{ error }}</li>
+                        {% endfor %}
+                    {% endfor %}
+                    {% for error in form.non_field_errors %}
+                        <li>{{ error }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        {% endif %}
+        
+        <form method="post" class="auth-form">
+            {% csrf_token %}
+            
+            {% for field in form %}
+                <div class="form-group">
+                    <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                    {{ field }}
+                    {% if field.help_text %}
+                        <small class="form-help">{{ field.help_text }}</small>
+                    {% endif %}
+                </div>
+            {% endfor %}
+            
+            <button type="submit" class="btn btn-primary auth-submit-btn">Registrati</button>
+        </form>
+        
+        <div class="auth-footer-links">
+            Hai già un account? <a href="{% url 'login' %}">Accedi</a>
+        </div>
+    </div>
+</div>
+{% endblock %}
