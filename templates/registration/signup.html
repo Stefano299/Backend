@@ -1,20 +1,25 @@
 {% extends 'base.html' %}
+{% load static %}
 
-{% block title %}Registrazione - UnifiStore{% endblock %}
+{% block title %}Registrazione - PC Parts Builder{% endblock %}
+
+{% block css %}
+    <link rel="stylesheet" href="{% static 'css/auth.css' %}">
+{% endblock %}
 
 {% block content %}
-<div class="auth-container">
+<div class="auth-wrapper">
     <div class="auth-card">
-        <h2 class="auth-title">Crea un Account</h2>
-        <p class="auth-subtitle">Compila i campi seguenti per registrarti</p>
+        <h1 class="auth-title">Crea Account</h1>
+        <p class="auth-subtitle">Unisciti a noi per assemblare il tuo PC.</p>
         
         {% if form.errors %}
-            <div class="auth-error-box">
-                <p>Si sono verificati degli errori durante la registrazione. Ricontrolla i dati inseriti.</p>
-                <ul>
+            <div class="alert-error">
+                Ci sono errori nel modulo:
+                <ul class="error-list">
                     {% for field in form %}
                         {% for error in field.errors %}
-                            <li><strong>{{ field.label }}:</strong> {{ error }}</li>
+                            <li>{{ field.label }}: {{ error }}</li>
                         {% endfor %}
                     {% endfor %}
                     {% for error in form.non_field_errors %}
@@ -28,19 +33,19 @@
             {% csrf_token %}
             
             {% for field in form %}
-                <div class="form-group">
-                    <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                <div class="input-group">
+                    <label>{{ field.label }}</label>
                     {{ field }}
                     {% if field.help_text %}
-                        <small class="form-help">{{ field.help_text }}</small>
+                        <small class="help-text">{{ field.help_text }}</small>
                     {% endif %}
                 </div>
             {% endfor %}
             
-            <button type="submit" class="btn btn-primary auth-submit-btn">Registrati</button>
+            <button type="submit" class="btn-auth">Registrati</button>
         </form>
         
-        <div class="auth-footer-links">
+        <div class="auth-footer">
             Hai già un account? <a href="{% url 'login' %}">Accedi</a>
         </div>
     </div>

@@ -1,54 +1,64 @@
 {% extends 'base.html' %}
+{% load static %}
 
-{% block title %}{{ product.name }} - UnifiStore{% endblock %}
+{% block title %}{{ product.name }} - PC Parts Builder{% endblock %}
+
+{% block css %}
+    <link rel="stylesheet" href="{% static 'css/detail.css' %}">
+{% endblock %}
 
 {% block content %}
-<a href="{% url 'shop:product_list' %}" class="back-btn">&larr; Torna al Catalogo</a>
+<div class="breadcrumb">
+    <a href="{% url 'shop:product_list' %}">&larr; Torna al Catalogo</a>
+</div>
 
-<div class="detail-container">
-    <div class="detail-img-wrapper">
+<div class="product-container">
+    <div class="product-gallery">
         {% if product.image_url %}
-            <img src="{{ product.image_url }}" alt="{{ product.name }}" class="detail-img">
+            <img src="{{ product.image_url }}" alt="{{ product.name }}">
         {% else %}
-            <div style="display: flex; align-items: center; justify-content: center; height: 100%; color: #9ca3af; background-color: #f3f4f6;">Nessuna immagine</div>
+            <div class="placeholder">Immagine non disponibile</div>
         {% endif %}
     </div>
 
-    <div class="detail-info">
-        <div>
-            <h1 class="product-title">{{ product.name }}</h1>
+    <div class="product-info">
+        <h1 class="title">{{ product.name }}</h1>
+        
+        <div class="tags">
+            {% for cat in product.categories.all %}
+                <span class="tag">{{ cat.name }}</span>
+            {% endfor %}
             
-            <div class="product-meta">
-                {% if product.stock > 0 %}
-                    <span class="stock-status in-stock">Disponibile ({{ product.stock }} pezzi)</span>
-                {% else %}
-                    <span class="stock-status out-of-stock">Esaurito</span>
-                {% endif %}
-                
-                {% for cat in product.categories.all %}
-                    <span class="badge">{{ cat.name }}</span>
-                {% endfor %}
-            </div>
-
-            <p class="product-desc">{{ product.description|default:"Nessuna descrizione disponibile per questo prodotto." }}</p>
-        </div>
-
-        <div class="detail-footer">
-            <div class="price-tag">€{{ product.price }}</div>
             {% if product.stock > 0 %}
-                <form action="{% url 'shop:cart_add' product.id %}" method="post" class="add-to-cart-form" style="display: flex; gap: 1rem; align-items: center; width: 100%;">
-                    {% csrf_token %}
-                    <div style="display: flex; flex-direction: column; gap: 0.25rem;">
-                        <label for="{{ cart_product_form.quantity.id_for_label }}" style="font-size: 0.85rem; font-weight: 600; color: #4b5563;">Quantità</label>
-                        {{ cart_product_form.quantity }}
-                    </div>
-                    {{ cart_product_form.override }}
-                    <button type="submit" class="btn btn-primary" style="flex: 1; height: 45px; margin-top: 1.15rem;">Aggiungi al Carrello</button>
-                </form>
+                <span class="tag in-stock">Disponibile ({{ product.stock }})</span>
             {% else %}
-                <button class="btn btn-secondary" style="width: 100%; cursor: not-allowed;" disabled>Non Disponibile</button>
+                <span class="tag out-stock">Esaurito</span>
             {% endif %}
         </div>
+
+        <p class="description">{{ product.description|default:"Nessuna descrizione." }}</p>
+        
+        <div class="price">€{{ product.price }}</div>
+
+        {% if product.stock > 0 %}
+            <form action="{% url 'shop:cart_add' product.id %}" method="post" class="add-to-cart">
+                {% csrf_token %}
+                <div class="quantity-control">
+                    <label>Quantità:</label>
+                    <div class="quantity-picker" data-js="quantity-picker">
+                        <button type="button" class="qty-btn" data-js="qty-minus">-</button>
+                        <input type="number" name="quantity" value="1" min="1" max="{{ product.stock }}" class="qty-input" data-js="qty-input" readonly>
+                        <button type="button" class="qty-btn" data-js="qty-plus">+</button>
+                    </div>
+                    {{ cart_product_form.override }}
+                </div>
+                <button type="submit" class="btn-add">Aggiungi al Carrello</button>
+            </form>
+        {% else %}
+            <button class="btn-disabled" disabled>Non Disponibile</button>
+        {% endif %}
     </div>
 </div>
+
+<script src="{% static 'js/quantity.js' %}"></script>
 {% endblock %}

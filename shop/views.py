@@ -18,10 +18,10 @@ def product_list(request):
     else:
         max_limit = 1000
 
-    # Filtro categoria
-    category_id = request.GET.get('category')
-    if category_id:
-        products = products.filter(categories__id=category_id)
+    # Filtro categoria (multiplo)
+    category_ids = request.GET.getlist('categories')
+    if category_ids:
+        products = products.filter(categories__id__in=category_ids).distinct()
 
     # Ricerca
     search_query = request.GET.get('q')
@@ -39,7 +39,7 @@ def product_list(request):
     return render(request, "shop/catalog.html", {
         "products": products,
         "categories": categories,
-        "selected_category": category_id,
+        "selected_categories": category_ids,
         "search_query": search_query,
         "min_price": min_price,
         "max_price": max_price,

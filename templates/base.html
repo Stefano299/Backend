@@ -4,47 +4,44 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}UnifiStore{% endblock %}</title>
-    
-    <!-- Google Font -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    
-    <!-- Foglio di Stile Separato -->
-    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <title>{% block title %}PC Parts Builder{% endblock %}</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'css/base.css' %}">
+    {% block css %}{% endblock %}
 </head>
 <body>
-
-    <nav>
-        <a href="/" class="logo">UnifiStore</a>
+    <nav class="navbar" data-js="navbar">
+        <a href="/" class="brand">PC Parts Builder</a>
         <div class="nav-links">
             <a href="/">Home</a>
             <a href="{% url 'shop:product_list' %}">Catalogo</a>
+            <a href="{% url 'shop:cart_detail' %}">Carrello</a>
             {% if user.is_authenticated %}
-                <span class="user-greeting">Ciao, <strong>{{ user.username }}</strong></span>
+                <span class="user-info">{{ user.username }}@parts-builder</span>
                 {% if user.is_staff %}
-                    <a href="/admin/" target="_blank">Admin Panel</a>
+                    <a href="/admin/">Pannello Admin</a>
                 {% endif %}
-                <form action="{% url 'logout' %}" method="post" style="display: inline;">
+                <form action="{% url 'logout' %}" method="post" class="inline-form">
                     {% csrf_token %}
-                    <button type="submit" class="btn btn-secondary" style="padding: 0.3rem 0.8rem; font-size: 0.85rem;">Esci</button>
+                    <button type="submit" class="btn-logout">Esci</button>
                 </form>
             {% else %}
                 <a href="{% url 'login' %}">Accedi</a>
-                <a href="{% url 'signup' %}" class="btn btn-primary" style="padding: 0.3rem 0.8rem; font-size: 0.85rem; color: #ffffff;">Registrati</a>
+                <a href="{% url 'signup' %}" class="btn-primary">Registrati</a>
             {% endif %}
         </div>
     </nav>
 
-    <main>
-        {% block content %}
-        {% endblock %}
+    {% block fullwidth_top %}{% endblock %}
+
+    <main class="container">
+        {% block content %}{% endblock %}
     </main>
 
-    <footer>
-        <p>&copy; 2026 UnifiStore. Progetto Esercitazione Back-end.</p>
+    <footer class="footer">
+        <p>&copy; 2026 PC Parts Builder.</p>
     </footer>
 
+    <script src="{% static 'js/navbar.js' %}"></script>
 </body>
 </html>

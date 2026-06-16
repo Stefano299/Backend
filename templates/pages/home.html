@@ -1,42 +1,61 @@
 {% extends 'base.html' %}
+{% load static %}
 
-{% block title %}Benvenuto su UnifiStore{% endblock %}
+{% block title %}PC Parts Builder - Progetta il tuo PC{% endblock %}
+
+{% block css %}
+    <link rel="stylesheet" href="{% static 'css/home.css' %}">
+{% endblock %}
+
+{% block fullwidth_top %}
+<div class="hero-section">
+    <div class="hero-content">
+        <h1 class="hero-title">ASSEMBLA LA TUA WORKSTATION</h1>
+        <p class="hero-subtitle">Progetta e costruisci il tuo PC ideale. Offriamo una selezione di hardware di livello ingegneristico per garantire le massime prestazioni per gaming, rendering e produttività.</p>
+    </div>
+</div>
+{% endblock %}
 
 {% block content %}
-<div class="hero">
-    <h1>Benvenuto su UnifiStore</h1>
-    <p>Il nuovo e-commerce premium per lo shopping online veloce, sicuro ed elegante.</p>
-    <a href="{% url 'shop:product_list' %}" class="btn btn-primary">Esplora il Catalogo</a>
-</div>
-
-<div class="showcase">
-    <h2 class="section-title">Articoli in Evidenza</h2>
-    <p class="section-desc">Dai un'occhiata alle novità e ai prodotti più popolari del momento.</p>
+<div class="featured-section">
+    <h2 class="section-title">COMPONENTI IN EVIDENZA</h2>
+    <p class="section-desc">Le ultime aggiunte al nostro inventario hardware.</p>
     
     {% if products %}
-        <div class="grid">
+        <div class="product-grid-3">
             {% for product in products %}
-                <div class="card">
-                    {% if product.image_url %}
-                        <img src="{{ product.image_url }}" alt="{{ product.name }}" class="card-img">
-                    {% else %}
-                        <div class="card-img" style="display: flex; align-items: center; justify-content: center; color: #9ca3af;">No Image</div>
-                    {% endif %}
-                    <div class="card-body">
+                <a href="{% url 'shop:product_detail' product.id %}" class="product-card">
+                    <div class="card-image">
+                        {% if product.image_url %}
+                            <img src="{{ product.image_url }}" alt="{{ product.name }}">
+                        {% else %}
+                            <div class="placeholder-img">NESSUNA IMMAGINE</div>
+                        {% endif %}
+                    </div>
+                    <div class="card-content">
                         <h3 class="card-title">{{ product.name }}</h3>
-                        <p class="card-text">{{ product.description|truncatewords:15 }}</p>
-                        <div class="card-footer">
-                            <span class="price">€{{ product.price }}</span>
-                            <a href="{% url 'shop:product_detail' product.id %}" class="btn btn-secondary btn-sm">Dettagli</a>
+                        <div class="card-bottom">
+                            <span class="card-price">€{{ product.price }}</span>
                         </div>
                     </div>
-                </div>
+                </a>
             {% endfor %}
         </div>
     {% else %}
-        <p style="color: #6b7280; text-align: center; padding: 2rem; border: 1px dashed #e5e7eb; border-radius: 8px;">
-            Nessun prodotto disponibile al momento. Accedi all'admin per caricarne qualcuno!
-        </p>
+        <div class="empty-state">
+            Nessun prodotto disponibile al momento.
+        </div>
     {% endif %}
+</div>
+
+<div class="info-banner">
+    <div class="banner-image">
+        <img src="https://images.unsplash.com/photo-1587202372775-e229f172b9d7?q=80&w=500&auto=format&fit=crop" alt="PC Hardware Build">
+    </div>
+    <div class="banner-content">
+        <h2 class="banner-title">PROGETTAZIONE RETRO-FUTURISTICA</h2>
+        <p class="banner-text">Selezioniamo solo componenti hardware stabili e ad alte prestazioni. Che si tratti di compilazione software massiva, rendering 3D intensivo o calcolo scientifico, i nostri componenti garantiscono l'affidabilità richiesta per il lavoro professionale.</p>
+        <p class="banner-text">Dalla dissipazione termica ottimizzata all'efficienza energetica della PSU, curiamo l'architettura dei componenti per darti una base solida.</p>
+    </div>
 </div>
 {% endblock %}
