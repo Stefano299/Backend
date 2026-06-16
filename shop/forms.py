@@ -1,5 +1,5 @@
 from django import forms
-from .models import Product, Category
+from .models import Product, Category, Order
 
 class ProductForm(forms.ModelForm):
     class Meta:
@@ -30,3 +30,28 @@ class CartAddProductForm(forms.Form):
         widget=forms.NumberInput(attrs={'class': 'form-control', 'style': 'width: 80px; display: inline-block;'})
     )
     override = forms.BooleanField(required=False, initial=False, widget=forms.HiddenInput)
+
+
+class OrderCreateForm(forms.ModelForm):
+    PAYMENT_METHOD_CHOICES = [
+        ('card', 'Carta di Credito'),
+        ('paypal', 'PayPal'),
+        ('transfer', 'Bonifico Bancario'),
+    ]
+    payment_method = forms.ChoiceField(
+        choices=PAYMENT_METHOD_CHOICES,
+        widget=forms.RadioSelect(attrs={'class': 'payment-radio'}),
+        initial='card',
+        label='Metodo di Pagamento'
+    )
+
+    class Meta:
+        model = Order
+        fields = ['indirizzo', 'citta', 'codice_postale', 'numero_di_telefono', 'payment_method']
+        widgets = {
+            'indirizzo': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Via/Piazza, Numero Civico'}),
+            'citta': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'e.g. Roma'}),
+            'codice_postale': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'e.g. 50123'}),
+            'numero_di_telefono': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'e.g. +39 333 1234567'}),
+        }
+

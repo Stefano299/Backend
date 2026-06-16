@@ -1,0 +1,112 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Checkout - PC Parts Builder{% endblock %}
+
+{% block css %}
+    <link rel="stylesheet" href="{% static 'css/checkout.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>Checkout</h1>
+</div>
+
+<div class="checkout-layout">
+    <div class="checkout-form-container">
+        <h3>Indirizzo di Spedizione e Contatti</h3>
+        <form method="post" action="." class="checkout-form">
+            {% csrf_token %}
+            
+            {% if form.non_field_errors %}
+                <ul class="errorlist">
+                    {% for error in form.non_field_errors %}
+                        <li>{{ error }}</li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+
+            <div class="form-group">
+                <label for="{{ form.indirizzo.id_for_label }}">Indirizzo di Consegna</label>
+                {{ form.indirizzo }}
+                {% if form.indirizzo.errors %}
+                    <ul class="errorlist">
+                        {% for error in form.indirizzo.errors %}
+                            <li>{{ error }}</li>
+                        {% endfor %}
+                    </ul>
+                {% endif %}
+            </div>
+
+            <div class="form-group">
+                <label for="{{ form.citta.id_for_label }}">Città</label>
+                {{ form.citta }}
+                {% if form.citta.errors %}
+                    <ul class="errorlist">
+                        {% for error in form.citta.errors %}
+                            <li>{{ error }}</li>
+                        {% endfor %}
+                    </ul>
+                {% endif %}
+            </div>
+
+            <div class="form-group">
+                <label for="{{ form.codice_postale.id_for_label }}">Codice Postale</label>
+                {{ form.codice_postale }}
+                {% if form.codice_postale.errors %}
+                    <ul class="errorlist">
+                        {% for error in form.codice_postale.errors %}
+                            <li>{{ error }}</li>
+                        {% endfor %}
+                    </ul>
+                {% endif %}
+            </div>
+
+            <div class="form-group">
+                <label for="{{ form.numero_di_telefono.id_for_label }}">Numero di Telefono</label>
+                {{ form.numero_di_telefono }}
+                {% if form.numero_di_telefono.errors %}
+                    <ul class="errorlist">
+                        {% for error in form.numero_di_telefono.errors %}
+                            <li>{{ error }}</li>
+                        {% endfor %}
+                    </ul>
+                {% endif %}
+            </div>
+
+            <h3>Metodo di Pagamento</h3>
+            <div class="payment-methods">
+                {% for radio in form.payment_method %}
+                    <div class="payment-option">
+                        {{ radio.tag }}
+                        <label for="{{ radio.id_for_label }}">{{ radio.choice_label }}</label>
+                    </div>
+                {% endfor %}
+            </div>
+            
+            <button type="submit" class="btn-order">Completa l'Ordine</button>
+        </form>
+    </div>
+
+    <div class="checkout-summary">
+        <h3>Riepilogo Ordine</h3>
+        <div class="order-items-summary">
+            {% for item in cart %}
+                <div class="order-item-mini">
+                    <span class="item-name">{{ item.product.name }}</span>
+                    <span>{{ item.quantity }}x €{{ item.price }}</span>
+                </div>
+            {% endfor %}
+        </div>
+        
+        <div class="summary-row">
+            <span>Articoli:</span>
+            <span>{{ cart.get_total_items }}</span>
+        </div>
+        <div class="summary-row total">
+            <span>Totale:</span>
+            <span>€{{ cart.get_total_price }}</span>
+        </div>
+    </div>
+</div>
+{% endblock %}

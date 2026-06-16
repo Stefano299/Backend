@@ -59,7 +59,7 @@
             </div>
             
             {% if user.is_authenticated %}
-                <button class="btn-checkout">Procedi al Pagamento</button>
+                <a href="{% url 'shop:checkout' %}" class="btn-checkout">Procedi al Pagamento</a>
             {% else %}
                 <div class="login-prompt">
                     <p>Devi accedere per ordinare.</p>

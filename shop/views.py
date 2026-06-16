@@ -1,8 +1,9 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.db.models import Max
-from .models import Product, Category
+from django.contrib.auth.decorators import login_required
+from .models import Product, Category, Order, OrderItem
 from .cart import Cart
-from .forms import CartAddProductForm
+from .forms import CartAddProductForm, OrderCreateForm
 
 def product_list(request):
     products = Product.objects.all()
@@ -83,3 +84,76 @@ def cart_detail(request):
             'override': True
         })
     return render(request, 'shop/cart_detail.html', {'cart': cart})
+
+
+@login_required
+def checkout(request):
+    cart = Cart(request)
+    if len(cart) == 0:
+        return redirect('shop:cart_detail')
+    
+    user = request.user
+    # In caso completi il pagamento
+    if request.method == 'POST':
+        form = OrderCreateForm(request.POST)
+        if form.is_valid():
+            # Salva o aggiorna quelli inseriti
+            user_updated = False
+            if form.cleaned_data['indirizzo'] and user.indirizzo != form.cleaned_data['indirizzo']:
+                user.indirizzo = form.cleaned_data['indirizzo']
+                user_updated = True
+            if form.cleaned_data['citta'] and user.citta != form.cleaned_data['citta']:
+                user.citta = form.cleaned_data['citta']
+                user_updated = True
+            if form.cleaned_data['codice_postale'] and user.codice_postale != form.cleaned_data['codice_postale']:
+                user.codice_postale = form.cleaned_data['codice_postale']
+                user_updated = True
+            if form.cleaned_data['numero_di_telefono'] and user.numero_di_telefono != form.cleaned_data['numero_di_telefono']:
+                user.numero_di_telefono = form.cleaned_data['numero_di_telefono']
+                user_updated = True
+            if user_updated:
+                user.save()
+            
+            # Crea un ordine
+            order = form.save(commit=False)
+            order.user = user
+            order.paid = True 
+            order.save()
+            
+            for item in cart:
+                # Crea un order item per ogni prodotto nel carrello
+                OrderItem.objects.create(
+                    order=order,
+                    product=item['product'],
+                    price=item['price'],
+                    quantity=item['quantity']
+                )
+            
+            cart.clear()
+            return redirect('shop:order_created', order_id=order.id)
+    else:
+        # In caso contrario crea il form precompilato con i dati dell'utente
+        initial_data = {
+            'indirizzo': user.indirizzo,
+            'citta': user.citta,
+            'codice_postale': user.codice_postale,
+            'numero_di_telefono': user.numero_di_telefono,
+        }
+        form = OrderCreateForm(initial=initial_data)
+        
+    return render(request, 'shop/checkout.html', {
+        'cart': cart,
+        'form': form
+    })
+
+
+@login_required
+def order_created(request, order_id):
+    order = get_object_or_404(Order, id=order_id, user=request.user)
+    return render(request, 'shop/order_created.html', {'order': order})
+
+
+@login_required
+def order_list(request):
+    orders = Order.objects.filter(user=request.user)
+    return render(request, 'shop/order_list.html', {'orders': orders})

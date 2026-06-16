@@ -1,0 +1,176 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}I miei Ordini - PC Parts Builder{% endblock %}
+
+{% block css %}
+    <style>
+        .orders-container {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+        .order-card {
+            background: #1a1a1a;
+            border: 1px solid #27272a;
+            border-radius: 2px;
+            padding: 1.5rem;
+        }
+        .order-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #27272a;
+            padding-bottom: 0.8rem;
+            margin-bottom: 1rem;
+        }
+        .order-id {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: #f59e0b;
+        }
+        .order-date {
+            color: #71717a;
+            font-size: 0.9rem;
+        }
+        .order-body {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 1.5rem;
+        }
+        .order-items-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+        .order-item-row {
+            display: flex;
+            justify-content: space-between;
+            color: #cbd5e1;
+            font-size: 0.95rem;
+        }
+        .order-item-row span.name {
+            color: #e4e4e7;
+        }
+        .order-details-col {
+            border-left: 1px solid #27272a;
+            padding-left: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            font-size: 0.95rem;
+            color: #a1a1aa;
+        }
+        .order-details-col strong {
+            color: #e4e4e7;
+        }
+        .status-badge {
+            display: inline-block;
+            padding: 0.2rem 0.6rem;
+            border-radius: 2px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            width: fit-content;
+        }
+        .status-badge.paid {
+            background: rgba(16, 185, 129, 0.1);
+            color: #34d399;
+            border: 1px solid #059669;
+        }
+        .status-badge.pending {
+            background: rgba(245, 158, 11, 0.1);
+            color: #fbbf24;
+            border: 1px solid #d97706;
+        }
+        .no-orders {
+            background: #1a1a1a;
+            border: 1px solid #27272a;
+            padding: 4rem;
+            text-align: center;
+            border-radius: 2px;
+        }
+        .no-orders p {
+            font-size: 1.2rem;
+            color: #a1a1aa;
+            margin-bottom: 2rem;
+        }
+        .no-orders .btn-primary {
+            display: inline-block;
+        }
+        @media (max-width: 768px) {
+            .order-body {
+                grid-template-columns: 1fr;
+            }
+            .order-details-col {
+                border-left: none;
+                padding-left: 0;
+                border-top: 1px solid #27272a;
+                padding-top: 1.5rem;
+            }
+        }
+    </style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>I miei Ordini</h1>
+</div>
+
+{% if orders %}
+    <div class="orders-container">
+        {% for order in orders %}
+            <div class="order-card">
+                <div class="order-header">
+                    <div>
+                        <span class="order-id">Ordine #{{ order.id }}</span>
+                        <span class="order-date">effettuato il {{ order.created|date:"d M Y H:i" }}</span>
+                    </div>
+                    <div>
+                        {% if order.paid %}
+                            <span class="status-badge paid">Pagato</span>
+                        {% else %}
+                            <span class="status-badge pending">In Attesa</span>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <div class="order-body">
+                    <div class="order-items-list">
+                        <h4 style="margin: 0 0 0.8rem 0; color: #71717a;">Articoli Acquistati</h4>
+                        {% for item in order.items.all %}
+                            <div class="order-item-row">
+                                <span class="name">{{ item.product.name }}</span>
+                                <span>{{ item.quantity }}x €{{ item.price }}</span>
+                            </div>
+                        {% endfor %}
+                    </div>
+                    
+                    <div class="order-details-col">
+                        <div>Spedito a: <strong>{{ order.indirizzo }}, {{ order.citta }} ({{ order.codice_postale }})</strong></div>
+                        <div>Telefono: <strong>{{ order.numero_di_telefono }}</strong></div>
+                        <div>Metodo Pagamento: <strong>
+                            {% if order.payment_method == 'card' or order.payment_method == 'card_mock' %}
+                                Carta di Credito
+                            {% elif order.payment_method == 'paypal' or order.payment_method == 'paypal_mock' %}
+                                PayPal
+                            {% elif order.payment_method == 'transfer' or order.payment_method == 'transfer_mock' %}
+                                Bonifico Bancario
+                            {% else %}
+                                {{ order.payment_method }}
+                            {% endif %}
+                        </strong></div>
+                        <div style="margin-top: auto; font-size: 1.1rem;">
+                            Totale Ordine: <strong style="color: #f59e0b;">€{{ order.get_total_cost }}</strong>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+{% else %}
+    <div class="no-orders">
+        <p>Non hai ancora effettuato nessun ordine.</p>
+        <a href="{% url 'shop:product_list' %}" class="btn-primary">Inizia lo Shopping</a>
+    </div>
+{% endif %}
+{% endblock %}
