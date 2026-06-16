@@ -157,3 +157,9 @@ def order_created(request, order_id):
 def order_list(request):
     orders = Order.objects.filter(user=request.user)
     return render(request, 'shop/order_list.html', {'orders': orders})
+
+
+@login_required
+def order_detail(request, order_id):
+    order = get_object_or_404(Order, id=order_id, user=request.user)
+    return render(request, 'shop/order_detail.html', {'order': order})

@@ -1,0 +1,204 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Dettagli Ordine #{{ order.id }} - PC Parts Builder{% endblock %}
+
+{% block css %}
+<link rel="stylesheet" href="{% static 'css/orders.css' %}">
+{% endblock %}
+
+{% block content %}
+<a href="{% url 'shop:order_list' %}" class="btn-back">
+    &larr; Torna ai miei ordini
+</a>
+
+<div class="page-header" style="margin-bottom: 2rem;">
+    <h1 style="margin: 0; font-size: 2rem;">Dettagli dell'Ordine #{{ order.id }}</h1>
+    <p style="color: #71717a; margin: 0.5rem 0 0 0;">Effettuato il {{ order.created|date:"d F Y \a\l\l\e H:i" }}</p>
+</div>
+
+<div class="order-detail-container">
+    <!-- Left Column: Details & Products -->
+    <div>
+        <div class="order-info-card">
+            <h3 class="card-title">Informazioni di Spedizione e Pagamento</h3>
+            <div class="info-grid">
+                <div class="info-item">
+                    <span class="info-label">Indirizzo di Spedizione</span>
+                    <span class="info-value">{{ order.indirizzo }}</span>
+                    <span class="info-value">{{ order.citta }} ({{ order.codice_postale }})</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Recapito Telefonico</span>
+                    <span class="info-value">{{ order.numero_di_telefono }}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Metodo di Pagamento</span>
+                    <span class="info-value">
+                        {% if order.payment_method == 'card' or order.payment_method == 'card_mock' %}
+                            Carta di Credito
+                        {% elif order.payment_method == 'paypal' or order.payment_method == 'paypal_mock' %}
+                            PayPal
+                        {% elif order.payment_method == 'transfer' or order.payment_method == 'transfer_mock' %}
+                            Bonifico Bancario
+                        {% else %}
+                            {{ order.payment_method }}
+                        {% endif %}
+                    </span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Stato Pagamento</span>
+                    <span class="info-value">
+                        {% if order.paid %}
+                            <span class="status-badge paid" style="margin-top: 0.2rem;">Pagato</span>
+                        {% else %}
+                            <span class="status-badge pending" style="margin-top: 0.2rem;">In Attesa</span>
+                        {% endif %}
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <div class="products-card">
+            <h3 class="card-title">Articoli Acquistati</h3>
+            <table class="products-table">
+                <thead>
+                    <tr>
+                        <th>Prodotto</th>
+                        <th style="text-align: center;">Quantità</th>
+                        <th style="text-align: right;">Prezzo Unitario</th>
+                        <th style="text-align: right;">Totale</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in order.items.all %}
+                        <tr>
+                            <td>
+                                <div class="product-cell">
+                                    <img src="{{ item.product.image_url }}" alt="{{ item.product.name }}" class="product-img">
+                                    <div>
+                                        <a href="{% url 'shop:product_detail' item.product.id %}" class="product-link">
+                                            <span class="product-name">{{ item.product.name }}</span>
+                                        </a>
+                                        <div style="font-size: 0.85rem; color: #71717a; margin-top: 0.2rem;">
+                                            {{ item.product.description|truncatewords:8 }}
+                                        </div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td style="text-align: center; font-weight: 500;">
+                                {{ item.quantity }}
+                            </td>
+                            <td style="text-align: right; color: #cbd5e1;">
+                                €{{ item.price }}
+                            </td>
+                            <td style="text-align: right; font-weight: 600; color: #ffffff;">
+                                €{{ item.get_cost }}
+                            </td>
+                        </tr>
+                    {% endfor %}
+                    <tr class="total-row">
+                        <td colspan="3" style="text-align: right; border-bottom: none; padding-top: 1.5rem;">Totale Ordine:</td>
+                        <td class="total-price" style="text-align: right; border-bottom: none; padding-top: 1.5rem;">€{{ order.get_total_cost }}</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Right Column: Shipment Status Vertical Timeline -->
+    <div class="timeline-card">
+        <h3 class="card-title">Stato della Spedizione</h3>
+        
+        <div style="position: relative;">
+            <ul class="timeline">
+                <!-- Dynamic Height Active Progress Bar -->
+                <div class="timeline-progress" id="progress-line"></div>
+
+                <!-- Step 1: Ordine Ricevuto -->
+                <li class="timeline-item {% if order.return_order_number == 1 %}active{% elif order.return_order_number > 1 %}completed{% endif %}" data-step="1">
+                    <div class="timeline-bullet"></div>
+                    <div class="timeline-content">
+                        <span class="timeline-title">Ordine Ricevuto</span>
+                        <span class="timeline-desc">
+                            {% if order.return_order_number >= 1 %}
+                                Il tuo ordine è stato ricevuto ed è in fase di elaborazione.
+                            {% else %}
+                                In attesa di elaborazione.
+                            {% endif %}
+                        </span>
+                    </div>
+                </li>
+
+                <!-- Step 2: Spedizione -->
+                <li class="timeline-item {% if order.return_order_number == 2 %}active{% elif order.return_order_number > 2 %}completed{% endif %}" data-step="2">
+                    <div class="timeline-bullet"></div>
+                    <div class="timeline-content">
+                        <span class="timeline-title">Spedizione</span>
+                        <span class="timeline-desc">
+                            {% if order.return_order_number == 2 %}
+                                L'ordine è in preparazione per la spedizione.
+                            {% elif order.return_order_number > 2 %}
+                                L'ordine è stato preparato e affidato al corriere.
+                            {% else %}
+                                L'ordine deve essere preparato.
+                            {% endif %}
+                        </span>
+                    </div>
+                </li>
+
+                <!-- Step 3: In transito -->
+                <li class="timeline-item {% if order.return_order_number == 3 %}active{% elif order.return_order_number > 3 %}completed{% endif %}" data-step="3">
+                    <div class="timeline-bullet"></div>
+                    <div class="timeline-content">
+                        <span class="timeline-title">In transito</span>
+                        <span class="timeline-desc">
+                            {% if order.return_order_number == 3 %}
+                                Il pacco è in viaggio verso il centro di distribuzione locale.
+                            {% elif order.return_order_number > 3 %}
+                                Il pacco ha raggiunto l'hub di smistamento.
+                            {% else %}
+                                La spedizione deve partire.
+                            {% endif %}
+                        </span>
+                    </div>
+                </li>
+
+                <!-- Step 4: In consegna -->
+                <li class="timeline-item {% if order.return_order_number == 4 %}active{% elif order.return_order_number > 4 %}completed{% endif %}" data-step="4">
+                    <div class="timeline-bullet"></div>
+                    <div class="timeline-content">
+                        <span class="timeline-title">In consegna</span>
+                        <span class="timeline-desc">
+                            {% if order.return_order_number == 4 %}
+                                Il corriere ha preso in carico la spedizione per la consegna oggi.
+                            {% elif order.return_order_number > 4 %}
+                                Consegnato al destinatario.
+                            {% else %}
+                                Spedizione non ancora in consegna.
+                            {% endif %}
+                        </span>
+                    </div>
+                </li>
+
+                <!-- Step 5: Consegnato -->
+                <li class="timeline-item {% if order.return_order_number == 5 %}active{% elif order.return_order_number > 5 %}completed{% endif %}" data-step="5">
+                    <div class="timeline-bullet"></div>
+                    <div class="timeline-content">
+                        <span class="timeline-title">Consegnato</span>
+                        <span class="timeline-desc">
+                            {% if order.return_order_number == 5 %}
+                                Il pacco è stato consegnato con successo. Grazie per aver acquistato da noi!
+                            {% else %}
+                                Pacco non ancora consegnato.
+                            {% endif %}
+                        </span>
+                    </div>
+                </li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<script src="{% static 'js/timeline.js' %}"></script>
+{% endblock %}
