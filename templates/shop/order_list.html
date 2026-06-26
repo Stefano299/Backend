@@ -21,13 +21,6 @@
                         <a href="{% url 'shop:order_detail' order.id %}" class="order-id" style="text-decoration: underline;">Ordine #{{ order.id }}</a>
                         <span class="order-date">effettuato il {{ order.created|date:"d M Y H:i" }}</span>
                     </div>
-                    <div>
-                        {% if order.paid %}
-                            <span class="status-badge paid">Pagato</span>
-                        {% else %}
-                            <span class="status-badge pending">In Attesa</span>
-                        {% endif %}
-                    </div>
                 </div>
                 
                 <div class="order-body">

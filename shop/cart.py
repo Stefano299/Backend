@@ -38,17 +38,10 @@ class Cart:
             self.save()
 
     def get_total_price(self):
-        # Si sua decimal anzichè float per evitare errori di arrotondamento che sarebbero inaccettabili nel checkout
-        totale = Decimal('0.00')  
-        for item in self.cart.values():
-            totale += Decimal(item['price']) * item['quantity']
-        return totale
+        return sum(item['total_price'] for item in self)
 
     def get_total_items(self):
-        totale = 0
-        for item in self.cart.values():
-            totale += item['quantity']
-        return totale
+        return sum(item['quantity'] for item in self)
 
     # Permette di iterare sul carrello, ritornando anche i prodotti nel database
     def __iter__(self):

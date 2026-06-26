@@ -36,7 +36,6 @@ class Order(models.Model):
     numero_di_telefono = models.CharField(max_length=20)
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
-    paid = models.BooleanField(default=False)
     payment_method = models.CharField(max_length=50, default='card')
     shipping_status = models.CharField(
         max_length=20,

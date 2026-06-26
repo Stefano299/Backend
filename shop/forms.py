@@ -55,3 +55,13 @@ class OrderCreateForm(forms.ModelForm):
             'numero_di_telefono': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'e.g. +39 333 1234567'}),
         }
 
+
+class OrderEditForm(forms.ModelForm):
+    class Meta:
+        model = Order
+        fields = ['shipping_status']
+        widgets = {
+            'shipping_status': forms.Select(attrs={'class': 'form-control'}),
+        }
+
+

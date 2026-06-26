@@ -1,9 +1,16 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.db.models import Max
 from django.contrib.auth.decorators import login_required
+from django.core.exceptions import PermissionDenied
+from django.urls import reverse_lazy
+from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
+from django.views.generic import TemplateView
+from django.views import View
+from django.http import Http404
 from .models import Product, Category, Order, OrderItem
 from .cart import Cart
-from .forms import CartAddProductForm, OrderCreateForm
+from .forms import CartAddProductForm, OrderCreateForm, ProductForm, CategoryForm, OrderEditForm
+
 
 def product_list(request):
     products = Product.objects.all()
@@ -117,7 +124,6 @@ def checkout(request):
             # Crea un ordine
             order = form.save(commit=False)
             order.user = user
-            order.paid = True 
             order.save()
             
             for item in cart:
@@ -163,3 +169,108 @@ def order_list(request):
 def order_detail(request, order_id):
     order = get_object_or_404(Order, id=order_id, user=request.user)
     return render(request, 'shop/order_detail.html', {'order': order})
+
+
+# --- Manager Dashboard Views ---
+from django.core.exceptions import PermissionDenied
+from django.contrib.auth.decorators import login_required
+from functools import wraps
+
+def manager_required(view_func):
+    @wraps(view_func)
+    @login_required
+    def _wrapped_view(request, *args, **kwargs):
+        if not (request.user.is_staff or request.user.groups.filter(name='Store Manager').exists()):
+            raise PermissionDenied("Accesso negato. Questa sezione è riservata ai manager.")
+        return view_func(request, *args, **kwargs)
+    return _wrapped_view
+
+@manager_required
+def manager_dashboard(request):
+    products = Product.objects.all()
+    categories = Category.objects.all()
+    orders = Order.objects.all().order_by('-created')
+    return render(request, 'shop/manager_dashboard.html', {
+        'products': products,
+        'categories': categories,
+        'orders': orders
+    })
+
+# --- Prodotti ---
+@manager_required
+def product_create(request):
+    if request.method == 'POST':
+        form = ProductForm(request.POST)
+        if form.is_valid():
+            form.save()
+            return redirect('shop:manager_dashboard')
+    else:
+        form = ProductForm()
+    return render(request, 'shop/entity_form.html', {'form': form, 'entity_title': 'Prodotto'})
+
+@manager_required
+def product_update(request, pk):
+    product = get_object_or_404(Product, pk=pk)
+    if request.method == 'POST':
+        form = ProductForm(request.POST, instance=product)
+        if form.is_valid():
+            form.save()
+            return redirect('shop:manager_dashboard')
+    else:
+        form = ProductForm(instance=product)
+    return render(request, 'shop/entity_form.html', {'form': form, 'entity_title': 'Prodotto'})
+
+@manager_required
+def product_delete(request, pk):
+    product = get_object_or_404(Product, pk=pk)
+    product.delete()
+    return redirect('shop:manager_dashboard')
+
+# --- Categorie ---
+@manager_required
+def category_create(request):
+    if request.method == 'POST':
+        form = CategoryForm(request.POST)
+        if form.is_valid():
+            form.save()
+            return redirect('shop:manager_dashboard')
+    else:
+        form = CategoryForm()
+    return render(request, 'shop/entity_form.html', {'form': form, 'entity_title': 'Categoria'})
+
+@manager_required
+def category_update(request, pk):
+    category = get_object_or_404(Category, pk=pk)
+    if request.method == 'POST':
+        form = CategoryForm(request.POST, instance=category)
+        if form.is_valid():
+            form.save()
+            return redirect('shop:manager_dashboard')
+    else:
+        form = CategoryForm(instance=category)
+    return render(request, 'shop/entity_form.html', {'form': form, 'entity_title': 'Categoria'})
+
+@manager_required
+def category_delete(request, pk):
+    category = get_object_or_404(Category, pk=pk)
+    category.delete()
+    return redirect('shop:manager_dashboard')
+
+# --- Ordini ---
+@manager_required
+def order_update(request, pk):
+    order = get_object_or_404(Order, pk=pk)
+    if request.method == 'POST':
+        form = OrderEditForm(request.POST, instance=order)
+        if form.is_valid():
+            form.save()
+            return redirect('shop:manager_dashboard')
+    else:
+        form = OrderEditForm(instance=order)
+    return render(request, 'shop/entity_form.html', {'form': form, 'entity_title': 'Ordine'})
+
+@manager_required
+def order_delete(request, pk):
+    order = get_object_or_404(Order, pk=pk)
+    order.delete()
+    return redirect('shop:manager_dashboard')

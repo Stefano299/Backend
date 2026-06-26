@@ -1,0 +1,171 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Dashboard Manager - PC Parts Builder{% endblock %}
+
+{% block css %}
+    <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+    <div class="dashboard-header">
+        <div>
+            <h1>Dashboard Manager</h1>
+            <p>Pannello di controllo del negozio. Gestisci prodotti, categorie e ordini dei clienti.</p>
+        </div>
+    </div>
+
+    <!-- SEZIONE PRODOTTI -->
+    <details class="dashboard-section">
+        <summary class="section-header">
+            <h2>Gestione Prodotti</h2>
+            <div style="display: flex; gap: 1rem; align-items: center;">
+                <input type="text" placeholder="Cerca prodotto..." data-search-table="products-table" class="form-input" style="width: 200px; padding: 0.4rem; font-size: 0.85rem; margin: 0;">
+                <a href="{% url 'shop:product_create' %}" class="btn-dashboard btn-add">+ Aggiungi Prodotto</a>
+            </div>
+        </summary>
+        
+        <div style="overflow-x: auto;">
+            <table class="dashboard-table" id="products-table">
+                <thead>
+                    <tr>
+                        <th style="width: 60px;">Foto</th>
+                        <th style="width: 80px;">ID</th>
+                        <th>Nome</th>
+                        <th>Prezzo</th>
+                        <th>Stock</th>
+                        <th>Categorie</th>
+                        <th style="width: 180px;">Azioni</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for product in products %}
+                        <tr>
+                            <td>
+                                {% if product.image_url %}
+                                    <img src="{{ product.image_url }}" alt="{{ product.name }}" class="table-img">
+                                {% else %}
+                                    <div class="table-img" style="display: flex; align-items: center; justify-content: center; font-size: 0.6rem; color: #52525b;">N/D</div>
+                                {% endif %}
+                            </td>
+                            <td>#{{ product.id }}</td>
+                            <td><strong>{{ product.name }}</strong></td>
+                            <td>€{{ product.price }}</td>
+                            <td>
+                                <span style="{% if product.stock == 0 %}color: #f87171; font-weight: bold;{% endif %}">
+                                    {{ product.stock }} pz
+                                </span>
+                            </td>
+                            <td>
+                                {% for category in product.categories.all %}
+                                    <span style="color: #cbd5e1; border: 1px solid #52525b; padding: 0.1rem 0.4rem; font-size: 0.75rem; border-radius: 2px;">{{ category.name }}</span>
+                                {% empty %}
+                                    <span style="color: #71717a; font-style: italic;">Nessuna</span>
+                                {% endfor %}
+                            </td>
+                            <td class="actions">
+                                <a href="{% url 'shop:product_update' product.id %}" class="btn-dashboard btn-edit">Modifica</a>
+                                <a href="{% url 'shop:product_delete' product.id %}" class="btn-dashboard btn-delete">Elimina</a>
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="7" style="text-align: center; color: #71717a; font-style: italic; padding: 2rem;">Nessun prodotto presente nel catalogo.</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </details>
+
+    <!-- SEZIONE CATEGORIE -->
+    <details class="dashboard-section">
+        <summary class="section-header">
+            <h2>Gestione Categorie</h2>
+            <div style="display: flex; gap: 1rem; align-items: center;">
+                <input type="text" placeholder="Cerca categoria..." data-search-table="categories-table" class="form-input" style="width: 200px; padding: 0.4rem; font-size: 0.85rem; margin: 0;">
+                <a href="{% url 'shop:category_create' %}" class="btn-dashboard btn-add">+ Aggiungi Categoria</a>
+            </div>
+        </summary>
+        
+        <div style="overflow-x: auto;">
+            <table class="dashboard-table" id="categories-table">
+                <thead>
+                    <tr>
+                        <th style="width: 100px;">ID</th>
+                        <th>Nome Categoria</th>
+                        <th style="width: 180px;">Azioni</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for category in categories %}
+                        <tr>
+                            <td>#{{ category.id }}</td>
+                            <td><strong>{{ category.name }}</strong></td>
+                            <td class="actions">
+                                <a href="{% url 'shop:category_update' category.id %}" class="btn-dashboard btn-edit">Modifica</a>
+                                <a href="{% url 'shop:category_delete' category.id %}" class="btn-dashboard btn-delete">Elimina</a>
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="3" style="text-align: center; color: #71717a; font-style: italic; padding: 2rem;">Nessuna categoria creata.</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </details>
+
+    <!-- SEZIONE ORDINI -->
+    <details class="dashboard-section">
+        <summary class="section-header">
+            <h2>Gestione Ordini</h2>
+            <div style="display: flex; gap: 1rem; align-items: center;">
+                <input type="text" placeholder="Cerca ordini..." data-search-table="orders-table" class="form-input" style="width: 200px; padding: 0.4rem; font-size: 0.85rem; margin: 0;">
+            </div>
+        </summary>
+        
+        <div style="overflow-x: auto;">
+            <table class="dashboard-table" id="orders-table">
+                <thead>
+                    <tr>
+                        <th style="width: 100px;">ID Ordine</th>
+                        <th>Cliente</th>
+                        <th>Data</th>
+                        <th>Stato Spedizione</th>
+                        <th>Totale</th>
+                        <th style="width: 180px;">Azioni</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for order in orders %}
+                        <tr>
+                            <td><strong>#{{ order.id }}</strong></td>
+                            <td>{{ order.user.username }}</td>
+                            <td>{{ order.created|date:"d M Y H:i" }}</td>
+                            <td>
+                                <span style="color: #f59e0b; border: 1px solid #d97706; padding: 0.1rem 0.4rem; font-size: 0.75rem; border-radius: 2px; text-transform: uppercase;">
+                                    {{ order.get_shipping_status_display }}
+                                </span>
+                            </td>
+                            <td><strong>€{{ order.get_total_cost }}</strong></td>
+                            <td class="actions">
+                                <a href="{% url 'shop:order_update' order.id %}" class="btn-dashboard btn-edit">Aggiorna</a>
+                                <a href="{% url 'shop:order_delete' order.id %}" class="btn-dashboard btn-delete">Elimina</a>
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="6" style="text-align: center; color: #71717a; font-style: italic; padding: 2rem;">Nessun ordine ricevuto finora.</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </details>
+</div>
+
+<script src="{% static 'js/dashboard.js' %}"></script>
+{% endblock %}

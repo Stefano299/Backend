@@ -13,5 +13,22 @@ urlpatterns = [
     path("checkout/success/<int:order_id>/", views.order_created, name="order_created"),
     path("orders/", views.order_list, name="order_list"),
     path("orders/<int:order_id>/", views.order_detail, name="order_detail"),
+    
+    # Manager Dashboard
+    path("dashboard/", views.manager_dashboard, name="manager_dashboard"),
+    
+    # Prodotti
+    path("dashboard/product/add/", views.product_create, name="product_create"),
+    path("dashboard/product/<int:pk>/edit/", views.product_update, name="product_update"),
+    path("dashboard/product/<int:pk>/delete/", views.product_delete, name="product_delete"),
+    
+    # Categorie
+    path("dashboard/category/add/", views.category_create, name="category_create"),
+    path("dashboard/category/<int:pk>/edit/", views.category_update, name="category_update"),
+    path("dashboard/category/<int:pk>/delete/", views.category_delete, name="category_delete"),
+    
+    # Ordini
+    path("dashboard/order/<int:pk>/edit/", views.order_update, name="order_update"),
+    path("dashboard/order/<int:pk>/delete/", views.order_delete, name="order_delete"),
 ]
 

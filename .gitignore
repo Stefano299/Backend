@@ -1,3 +1,4 @@
 .venv/
 fonti/
 __pycache__/
+staticfiles/

@@ -106,7 +106,6 @@
     margin-bottom: 2rem;
 }
 
-/* Order Details Page */
 .order-detail-container {
     display: grid;
     grid-template-columns: 2fr 1fr;
@@ -228,7 +227,6 @@
     list-style: none;
 }
 
-/* Timeline background line */
 .timeline::before {
     content: '';
     position: absolute;
@@ -239,7 +237,6 @@
     background: #27272a;
 }
 
-/* Timeline active progress line */
 .timeline-progress {
     position: absolute;
     left: 9px;
@@ -259,7 +256,6 @@
     margin-bottom: 0;
 }
 
-/* Bullet markers */
 .timeline-bullet {
     position: absolute;
     left: -38px;
@@ -340,7 +336,6 @@
     color: #f59e0b;
 }
 
-/* Responsive adjustments */
 @media (max-width: 992px) {
     .order-detail-container {
         grid-template-columns: 1fr;
