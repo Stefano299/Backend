@@ -19,8 +19,8 @@
                 {% with product=item.product %}
                     <div class="cart-item">
                         <div class="item-img">
-                            {% if product.image_url %}
-                                <img src="{{ product.image_url }}" alt="{{ product.name }}">
+                            {% if product.image %}
+                                <img src="{{ product.image.url }}?t={% now 'U' %}" alt="{{ product.name }}">
                             {% else %}
                                 <div class="placeholder">No Img</div>
                             {% endif %}

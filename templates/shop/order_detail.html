@@ -65,7 +65,7 @@
                         <tr>
                             <td>
                                 <div class="product-cell">
-                                    <img src="{{ item.product.image_url }}" alt="{{ item.product.name }}" class="product-img">
+                                    <img src="{{ item.product.image.url }}?t={% now 'U' %}" alt="{{ item.product.name }}" class="product-img">
                                     <div>
                                         <a href="{% url 'shop:product_detail' item.product.id %}" class="product-link">
                                             <span class="product-name">{{ item.product.name }}</span>

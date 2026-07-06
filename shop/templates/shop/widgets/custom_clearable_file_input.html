@@ -1,0 +1,6 @@
+# Widget creato per fare sì che quando uno modifica un prodotto, non appaia una checkbox 
+# senza descrizione accanto al nome del file dell'immagine per eliminarlo
+
+{% if widget.is_initial %}{{ widget.initial_text }}: <a href="{{ widget.value.url }}">{{ widget.value }}</a><br>
+{{ widget.input_text }}:{% endif %}
+<input type="{{ widget.type }}" name="{{ widget.name }}"{% include "django/forms/widgets/attrs.html" %}>

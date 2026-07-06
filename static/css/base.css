@@ -68,6 +68,12 @@ a:hover {
     font-size: 0.95rem;
 }
 
+.cart-badge {
+    color: #f59e0b;
+    font-weight: 700;
+    margin-left: 0.15rem;
+}
+
 .btn-primary {
     background-color: transparent;
     color: #f59e0b !important;

@@ -64,7 +64,7 @@ class ManagerDashboardTests(TestCase):
             'description': 'Super CPU',
             'price': '350.00',
             'stock': 5,
-            'image_url': 'http://example.com/img.jpg',
+            'image': '',
             'categories': [self.category.id]
         })
         self.assertRedirects(response, reverse('shop:manager_dashboard'))
@@ -76,7 +76,7 @@ class ManagerDashboardTests(TestCase):
             'name': 'AMD Ryzen 5 Updated',
             'price': '180.00',
             'stock': 8,
-            'image_url': self.product.image_url,
+            'image': '',
             'categories': [self.category.id]
         })
         self.assertRedirects(response, reverse('shop:manager_dashboard'))
@@ -158,7 +158,7 @@ class SellerRoleTests(TestCase):
             'description': 'RAM',
             'price': '90.00',
             'stock': 12,
-            'image_url': 'http://example.com/ram.jpg',
+            'image': '',
             'categories': [self.category.id]
         })
         self.assertRedirects(response, reverse('shop:manager_dashboard'))
@@ -171,7 +171,7 @@ class SellerRoleTests(TestCase):
             'name': 'Corsair Vengeance Updated',
             'price': '85.00',
             'stock': 10,
-            'image_url': self.product_own.image_url,
+            'image': '',
             'categories': [self.category.id]
         })
         self.assertRedirects(response, reverse('shop:manager_dashboard'))
@@ -184,7 +184,7 @@ class SellerRoleTests(TestCase):
             'name': 'G.Skill Trident Hacked',
             'price': '10.00',
             'stock': 99,
-            'image_url': self.product_other.image_url,
+            'image': '',
             'categories': [self.category.id]
         })
         self.assertEqual(response.status_code, 403)
@@ -208,7 +208,7 @@ class SellerRoleTests(TestCase):
             'name': 'Corsair Vengeance Hacked By Manager',
             'price': '85.00',
             'stock': 10,
-            'image_url': self.product_own.image_url,
+            'image': '',
             'categories': [self.category.id]
         })
         self.assertRedirects(response, reverse('shop:manager_dashboard'))
@@ -454,3 +454,190 @@ class SellerWalletAndAverageRatingTests(TestCase):
         # Media deve essere 4.5 su 5
         response = self.client.get(reverse('shop:product_detail', args=[self.product.id]))
         self.assertContains(response, 'star-icon filled')
+
+
+class PCBuilderTests(TestCase):
+    def setUp(self):
+        # Crea o recupera le categorie richieste per il builder
+        self.cpu_cat, _ = Category.objects.get_or_create(name='Processore')
+        self.cooler_cat, _ = Category.objects.get_or_create(name='Dissipatore')
+        self.mobo_cat, _ = Category.objects.get_or_create(name='Scheda Madre')
+        self.ram_cat, _ = Category.objects.get_or_create(name='Memoria RAM')
+        self.gpu_cat, _ = Category.objects.get_or_create(name='Scheda Video')
+        self.storage_cat, _ = Category.objects.get_or_create(name='Storage')
+        self.psu_cat, _ = Category.objects.get_or_create(name='Alimentatore')
+        self.case_cat, _ = Category.objects.get_or_create(name='Case')
+
+        # Crea prodotti per testare il flusso ed il filtro di compatibilità
+        self.cpu_amd = Product.objects.create(name='AMD Ryzen 5 7600', description='Processore socket AM5', price=200.00, stock=5)
+        self.cpu_amd.categories.add(self.cpu_cat)
+
+        self.cpu_intel = Product.objects.create(name='Intel Core i5-13400', description='Processore LGA1700', price=210.00, stock=5)
+        self.cpu_intel.categories.add(self.cpu_cat)
+
+        self.mobo_amd = Product.objects.create(name='ASUS Prime B650', description='Scheda madre AM5 socket', price=150.00, stock=5)
+        self.mobo_amd.categories.add(self.mobo_cat)
+
+        self.mobo_intel = Product.objects.create(name='ASUS Prime B760', description='Scheda madre LGA1700 socket', price=140.00, stock=5)
+        self.mobo_intel.categories.add(self.mobo_cat)
+
+        self.cooler = Product.objects.create(name='Be Quiet Pure Rock', description='Cooler', price=40.00, stock=5)
+        self.cooler.categories.add(self.cooler_cat)
+
+        self.ram = Product.objects.create(name='Kingston Fury 16GB', description='RAM DDR5', price=70.00, stock=5)
+        self.ram.categories.add(self.ram_cat)
+
+        self.gpu = Product.objects.create(name='Nvidia RTX 4060', description='GPU', price=300.00, stock=5)
+        self.gpu.categories.add(self.gpu_cat)
+
+        self.storage = Product.objects.create(name='Crucial P3 1TB', description='SSD M.2', price=60.00, stock=5)
+        self.storage.categories.add(self.storage_cat)
+
+        self.psu = Product.objects.create(name='Corsair CX650M', description='PSU 650W', price=80.00, stock=5)
+        self.psu.categories.add(self.psu_cat)
+
+        self.case = Product.objects.create(name='Corsair 4000D', description='ATX Case', price=90.00, stock=5)
+        self.case.categories.add(self.case_cat)
+
+    def test_step_view_and_selection(self):
+        # Verifica la visualizzazione dello Step 1 (CPU)
+        response = self.client.get(reverse('shop:pc_builder_step', args=[1]))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'AMD Ryzen 5 7600')
+        self.assertContains(response, 'Intel Core i5-13400')
+
+        # Seleziona la CPU AMD inviando il form via POST
+        response = self.client.post(reverse('shop:pc_builder_step', args=[1]), {'product_id': self.cpu_amd.id})
+        # Dovrebbe reindirizzare allo step successivo (Step 2)
+        self.assertRedirects(response, reverse('shop:pc_builder_step', args=[2]))
+        # Controlla che sia stato salvato in sessione
+        self.assertEqual(self.client.session.get('pc_build_step_1'), str(self.cpu_amd.id))
+
+    def test_compatibility_filtering(self):
+        # Imposta in sessione la scelta di una CPU AMD al passo 1
+        session = self.client.session
+        session['pc_build_step_1'] = str(self.cpu_amd.id)
+        session.save()
+
+        # Visita il passo 3 (Scheda Madre)
+        response = self.client.get(reverse('shop:pc_builder_step', args=[3]))
+        self.assertEqual(response.status_code, 200)
+        # Dovrebbe contenere solo la scheda madre compatibile AMD AM5
+        self.assertContains(response, 'ASUS Prime B650')
+        self.assertNotContains(response, 'ASUS Prime B760')
+
+        # Cambiamo la CPU in Intel
+        session = self.client.session
+        session['pc_build_step_1'] = str(self.cpu_intel.id)
+        session.save()
+
+        response = self.client.get(reverse('shop:pc_builder_step', args=[3]))
+        self.assertEqual(response.status_code, 200)
+        # Se CPU è Intel, filtriamo (quindi escludiamo la scheda madre AMD 'ASUS Prime B650')
+        self.assertContains(response, 'ASUS Prime B760')
+        self.assertNotContains(response, 'ASUS Prime B650')
+
+    def test_summary_and_add_to_cart(self):
+        # Simula la selezione di tutti gli 8 componenti salvandoli in sessione
+        session = self.client.session
+        session['pc_build_step_1'] = str(self.cpu_amd.id)
+        session['pc_build_step_2'] = str(self.cooler.id)
+        session['pc_build_step_3'] = str(self.mobo_amd.id)
+        session['pc_build_step_4'] = str(self.ram.id)
+        session['pc_build_step_5'] = str(self.gpu.id)
+        session['pc_build_step_6'] = str(self.storage.id)
+        session['pc_build_step_7'] = str(self.psu.id)
+        session['pc_build_step_8'] = str(self.case.id)
+        session.save()
+
+        # Visualizza la pagina di riepilogo
+        response = self.client.get(reverse('shop:pc_builder_summary'))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'AMD Ryzen 5 7600')
+        self.assertContains(response, 'ASUS Prime B650')
+        self.assertContains(response, 'Corsair 4000D')
+        self.assertNotContains(response, 'La configurazione è incompleta')
+
+        # Invia la conferma del riepilogo via POST per aggiungere al carrello
+        response = self.client.post(reverse('shop:pc_builder_summary'))
+        # Dovrebbe reindirizzare alla pagina di dettaglio del carrello
+        self.assertRedirects(response, reverse('shop:cart_detail'))
+
+        # Controlla che i componenti siano nel carrello
+        response = self.client.get(reverse('shop:cart_detail'))
+        self.assertContains(response, 'AMD Ryzen 5 7600')
+        self.assertContains(response, 'ASUS Prime B650')
+        self.assertContains(response, 'Corsair 4000D')
+
+        # Controlla che la sessione dell'assemblaggio sia stata pulita
+        for i in range(1, 9):
+            self.assertIsNone(self.client.session.get(f'pc_build_step_{i}'))
+
+    def test_clear_builder(self):
+        # Simula alcune scelte parziali in sessione
+        session = self.client.session
+        session['pc_build_step_1'] = str(self.cpu_amd.id)
+        session['pc_build_step_2'] = str(self.cooler.id)
+        session.save()
+
+        # Chiama l'URL di cancellazione
+        response = self.client.get(reverse('shop:pc_builder_clear'))
+        self.assertRedirects(response, reverse('shop:pc_builder_step', args=[1]))
+
+        # Verifica che la sessione sia vuota
+        for i in range(1, 9):
+            self.assertIsNone(self.client.session.get(f'pc_build_step_{i}'))
+
+
+from django.core.files.uploadedfile import SimpleUploadedFile
+import tempfile
+import shutil
+from django.test import override_settings
+
+TEMP_MEDIA_ROOT = tempfile.mkdtemp()
+
+@override_settings(MEDIA_ROOT=TEMP_MEDIA_ROOT)
+class ProductImageTests(TestCase):
+    @classmethod
+    def tearDownClass(cls):
+        shutil.rmtree(TEMP_MEDIA_ROOT, ignore_errors=True)
+        super().tearDownClass()
+
+    def setUp(self):
+        self.manager_group, _ = Group.objects.get_or_create(name='Store Manager')
+        self.manager = User.objects.create_user(username='manager_img', password='password123')
+        self.manager.groups.add(self.manager_group)
+        self.category = Category.objects.create(name='Processori')
+
+    def test_product_create_with_image(self):
+        self.client.login(username='manager_img', password='password123')
+        small_gif = (
+            b'\x47\x49\x46\x38\x39\x61\x01\x00\x01\x00\x00\x00\x00\x21\xf9\x04'
+            b'\x01\x0a\x00\x01\x00\x2c\x00\x00\x00\x00\x01\x00\x01\x00\x00\x02'
+            b'\x02\x4c\x01\x00\x3b'
+        )
+        uploaded_image = SimpleUploadedFile('test_image.gif', small_gif, content_type='image/gif')
+        
+        response = self.client.post(reverse('shop:product_create'), {
+            'name': 'Intel Core i9',
+            'description': 'Powerful CPU',
+            'price': '600.00',
+            'stock': 3,
+            'image': uploaded_image,
+            'categories': [self.category.id]
+        })
+        self.assertRedirects(response, reverse('shop:manager_dashboard'))
+        
+        product = Product.objects.get(name='Intel Core i9')
+        self.assertTrue(product.image.name.startswith('products/test_image'))
+        self.assertTrue(product.image.url.startswith('/media/products/test_image'))
+
+    def test_product_fallback_image(self):
+        product = Product.objects.create(
+            name='Intel Core i3',
+            price=100.00,
+            stock=15
+        )
+        self.assertEqual(product.image.url, "/media/products/default.jpg")
+
+

@@ -32,5 +32,11 @@ urlpatterns = [
     # Ordini
     path("dashboard/order/<int:pk>/edit/", views.order_update, name="order_update"),
     path("dashboard/order/<int:pk>/delete/", views.order_delete, name="order_delete"),
+    
+    # PC Building
+    path("builder/step/<int:step>/", views.pc_builder_step, name="pc_builder_step"),
+    path("builder/summary/", views.pc_builder_summary, name="pc_builder_summary"),
+    path("builder/clear/", views.pc_builder_clear, name="pc_builder_clear"),
 ]
+
 

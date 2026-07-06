@@ -21,8 +21,8 @@
         <div class="dashboard-section dashboard-wallet-container">
             <div class="wallet-header">
                 <div>
-                    <h2 class="wallet-title">Mio Portafoglio</h2>
-                    <p class="wallet-subtitle">Saldo disponibile maturato dalle vendite dei tuoi prodotti.</p>
+                    <h2 class="wallet-title">Il Mio Portafoglio</h2>
+                    <p class="wallet-subtitle">Saldo disponibile in base alle vendite dei tuoi prodotti.</p>
                 </div>
                 <div class="wallet-balance">
                     €{{ user.wallet_balance }}
@@ -78,8 +78,8 @@
                     {% for product in products %}
                         <tr>
                             <td>
-                                {% if product.image_url %}
-                                    <img src="{{ product.image_url }}" alt="{{ product.name }}" class="table-img">
+                                {% if product.image %}
+                                    <img src="{{ product.image.url }}?t={% now 'U' %}" alt="{{ product.name }}" class="table-img">
                                 {% else %}
                                     <div class="table-img table-img-placeholder">N/D</div>
                                 {% endif %}
@@ -115,9 +115,10 @@
     </details>
 
     <!-- SEZIONE VENDITE EFFETTUATE (acquistati dagli altri) -->
+    {% if not is_manager %}
     <details open class="dashboard-section">
         <summary class="section-header">
-            <h2>{% if is_manager %}Rapporto Vendite Totali{% else %}Prodotti Venduti{% endif %}</h2>
+            <h2>Prodotti Venduti</h2>
             <div class="section-header-actions">
                 <input type="text" placeholder="Cerca vendite..." data-search-table="sales-table" class="form-input">
             </div>
@@ -156,6 +157,7 @@
             </table>
         </div>
     </details>
+    {% endif %}
 
     <!-- SEZIONE CATEGORIE -->
     {% if user.is_staff or perms.shop.add_category %}

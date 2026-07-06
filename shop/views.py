@@ -313,7 +313,7 @@ def transfer_wallet(request):
 @seller_or_manager_required
 def product_create(request):
     if request.method == 'POST':
-        form = ProductForm(request.POST)
+        form = ProductForm(request.POST, request.FILES)
         if form.is_valid():
             product = form.save(commit=False)
             # Assegna il venditore al prodotto (se l'utente è seller)
@@ -336,7 +336,7 @@ def product_update(request, pk):
         raise PermissionDenied("Non hai i permessi per modificare questo prodotto.")
         
     if request.method == 'POST':
-        form = ProductForm(request.POST, instance=product)
+        form = ProductForm(request.POST, request.FILES, instance=product)
         if form.is_valid():
             form.save()
             return redirect('shop:manager_dashboard')
@@ -404,3 +404,202 @@ def order_delete(request, pk):
     order = get_object_or_404(Order, pk=pk)
     order.delete()
     return redirect('shop:manager_dashboard')
+
+# --- PC Builder (Assemblatore PC) ---
+
+def pc_builder_step(request, step=1):
+    categories_order = [
+        'Processore',
+        'Dissipatore',
+        'Scheda Madre',
+        'Memoria RAM',
+        'Scheda Video',
+        'Storage',
+        'Alimentatore',
+        'Case'
+    ]
+    
+    if step < 1 or step > len(categories_order):
+        return redirect('shop:pc_builder_step', step=1)
+        
+    current_cat_name = categories_order[step - 1]
+    category = Category.objects.filter(name=current_cat_name).first()
+    if not category:
+        raise Http404("Categoria non trovata")
+    
+    # Carica tutti i prodotti nel db per la categoria
+    products = Product.objects.filter(categories=category, stock__gt=0)
+    
+    # Compatibilità semplice basata su marca/socket (livello studente)
+    selected_cpu_id = request.session.get('pc_build_step_1')
+    selected_mobo_id = request.session.get('pc_build_step_3')
+    selected_gpu_id = request.session.get('pc_build_step_5')
+    
+    compatibility_applied = False
+    compatibility_details = "" # I dettagli saranno visualizzati dall'utente nella pagina
+    cpu_name = None
+    
+    # Prepara nome CPU se già selezionata
+    if selected_cpu_id:
+        cpu = Product.objects.filter(id=selected_cpu_id).first()
+        if cpu:
+            cpu_name = cpu.name
+
+    # Step 2: Dissipatore
+    if step == 2 and selected_cpu_id:
+        cpu = Product.objects.filter(id=selected_cpu_id).first()
+        if cpu:
+            if "AMD" in cpu.name or "Ryzen" in cpu.name or "AMD" in cpu.description or "Ryzen" in cpu.description:
+                compatibility_applied = True
+                products = products.filter(description__icontains="AM5") | products.filter(description__icontains="AM4")
+                compatibility_details = "Dissipatori compatibili con AMD"
+            else:
+                compatibility_applied = True
+                products = products.exclude(description__icontains="AM5").exclude(description__icontains="AM4")
+                compatibility_details = "Dissipatori compatibili con Intel"
+
+    # Step 3: Scheda Madre
+    elif step == 3 and selected_cpu_id:
+        cpu = Product.objects.filter(id=selected_cpu_id).first()
+        if cpu:
+            if "AMD" in cpu.name or "Ryzen" in cpu.name:
+                compatibility_applied = True
+                products = products.filter(description__icontains="AM5") | products.filter(description__icontains="AM4")
+                compatibility_details = "Schede madri con socket AMD AM5"
+            else:
+                compatibility_applied = True
+                products = products.exclude(description__icontains="AM5").exclude(description__icontains="AM4")
+                compatibility_details = "Schede madri con socket Intel"
+           
+    # Step 4: Memoria RAM
+    elif step == 4 and selected_mobo_id:
+        mobo = Product.objects.filter(id=selected_mobo_id).first()
+        if mobo:
+            compatibility_applied = True
+            # Controlla se la scheda madre usa DDR5 o DDR4
+            if "DDR5" in mobo.name or "DDR5" in mobo.description:
+                products = products.filter(description__icontains="DDR5")
+                compatibility_details = "Memoria RAM DDR5 richiesta dalla scheda madre"
+            else:
+                products = products.filter(description__icontains="DDR4")
+                compatibility_details = "Memoria RAM DDR4 richiesta dalla scheda madre"
+
+    # Step 7: Alimentatore
+    elif step == 7 and selected_gpu_id:
+        gpu = Product.objects.filter(id=selected_gpu_id).first()
+        if gpu:
+            compatibility_applied = True
+            # Se la scheda video contiene "40" tipo la rtx 4090, che sono potenti
+            if "40" in gpu.name:
+                # Escludo gli alimentatori da 750W o inferiori per tenere solo quelli superiori
+                products = products.exclude(description__icontains="450W")\
+                                   .exclude(description__icontains="550W")\
+                                   .exclude(description__icontains="650W")\
+                                   .exclude(description__icontains="750W")
+                compatibility_details = "Alimentatori superiori a 750W richiesti per GPU della serie 40"
+            else:
+                compatibility_details = "Alimentatori consigliati per la tua configurazione"
+                
+    # Salva componente in sessione
+    if request.method == 'POST':
+        product_id = request.POST.get('product_id')
+        if product_id:
+            request.session[f'pc_build_step_{step}'] = product_id
+            request.session.modified = True
+            
+            # Passa allo step successivo o al riepilogo
+            if step < len(categories_order):
+                return redirect('shop:pc_builder_step', step=step + 1)
+            else:
+                return redirect('shop:pc_builder_summary')
+                
+    # Lista dei passaggi con i prodotti per il template
+    steps_data = []
+    total_price = 0
+    for i, cat_name in enumerate(categories_order, start=1):
+        p_id = request.session.get(f'pc_build_step_{i}')
+        prod = None
+        if p_id:
+            prod = Product.objects.filter(id=p_id).first()
+            if prod:
+                total_price += prod.price
+        steps_data.append({
+            'number': i,
+            'name': cat_name,
+            'product': prod,
+            'is_current': (i == step),
+            'is_completed': (prod is not None),
+        })
+                
+    return render(request, 'shop/pc_builder_step.html', {
+        'step': step,
+        'total_steps': len(categories_order),
+        'category_name': current_cat_name,
+        'products': products,
+        'steps_data': steps_data,
+        'total_price': total_price,
+        'compatibility_applied': compatibility_applied,
+        'compatibility_details': compatibility_details,
+        'cpu_name': cpu_name,
+    })
+
+def pc_builder_summary(request):
+    categories_order = [
+        'Processore',
+        'Dissipatore',
+        'Scheda Madre',
+        'Memoria RAM',
+        'Scheda Video',
+        'Storage',
+        'Alimentatore',
+        'Case'
+    ]
+    
+    # Recupera i componenti selezionati
+    selected_components = []
+    total_price = 0
+    missing_components = False
+    
+    for i in range(1, len(categories_order) + 1):
+        p_id = request.session.get(f'pc_build_step_{i}')
+        if p_id:
+            prod = Product.objects.filter(id=p_id).first()
+            if prod:
+                selected_components.append(prod)
+                total_price += prod.price
+            else:
+                missing_components = True
+        else:
+            missing_components = True
+            
+    if request.method == 'POST':
+        if not missing_components:
+            # Aggiungo i prodotti selezionati al carrello
+            cart = Cart(request)
+            for prod in selected_components:
+                cart.add(product=prod, quantity=1, override_quantity=False)
+                
+            # Svuoto la sessione del builder
+            for i in range(1, len(categories_order) + 1):
+                key = f'pc_build_step_{i}'
+                if key in request.session:
+                    del request.session[key]
+            request.session.modified = True
+            
+            return redirect('shop:cart_detail')
+            
+    return render(request, 'shop/pc_builder_summary.html', {
+        'selected_components': selected_components,
+        'total_price': total_price,
+        'missing_components': missing_components,
+        'total_steps': len(categories_order),
+    })
+
+def pc_builder_clear(request):
+    # Cancella tutti i dati dell'assemblaggio salvati in sessione
+    for i in range(1, 9):
+        key = f'pc_build_step_{i}'
+        if key in request.session:
+            del request.session[key]
+    request.session.modified = True
+    return redirect('shop:pc_builder_step', step=1)

@@ -15,7 +15,7 @@
         <div class="nav-links">
             <a href="/">Home</a>
             <a href="{% url 'shop:product_list' %}">Catalogo</a>
-            <a href="{% url 'shop:cart_detail' %}">Carrello</a>
+            <a href="{% url 'shop:cart_detail' %}">Carrello{% if cart|length > 0 %} <span class="cart-badge">({{ cart|length }})</span>{% endif %}</a>
             {% if user.is_authenticated %}
                 <a href="{% url 'shop:order_list' %}">I miei Ordini</a>
                 <span class="user-info">{{ user.username }}</span>

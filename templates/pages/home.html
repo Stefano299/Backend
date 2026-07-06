@@ -17,17 +17,57 @@
 {% endblock %}
 
 {% block content %}
+<div class="how-it-works-section">
+    <h2 class="section-title text-center">COME FUNZIONA</h2>
+    
+    <div class="options-grid">
+        <div class="option-card">
+            <div>
+                <h3 class="option-title">Assemblatore Guidato</h3>
+                <p class="option-text">
+                    Costruisci la tua workstation passo-passo. Il configuratore ti guida nella scelta di processore, scheda madre, RAM e tutti i componenti necessari, verificando in automatico la compatibilità dei socket ad ogni passaggio.
+                </p>
+            </div>
+            <div class="option-action">
+                <a href="{% url 'shop:pc_builder_step' 1 %}" class="btn-builder-option">ASSEMBLA IL PC</a>
+            </div>
+        </div>
+        
+        <div class="option-card">
+            <div>
+                <h3 class="option-title">Componenti Singoli</h3>
+                <p class="option-text">
+                    Hai già in mente l'upgrade specifico per il tuo sistema? Esplora il nostro catalogo completo. Puoi cercare, filtrare per categoria e aggiungere direttamente al carrello i singoli componenti in totale autonomia.
+                </p>
+            </div>
+            <div class="option-action">
+                <a href="{% url 'shop:product_list' %}" class="btn-builder-option">SFOGLIA IL CATALOGO</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="info-banner" style="margin-bottom: 5rem;">
+    <div class="banner-image">
+        <img src="https://images.unsplash.com/photo-1587202372775-e229f172b9d7?q=80&w=500&auto=format&fit=crop" alt="PC Hardware Build">
+    </div>
+    <div class="banner-content">
+        <h2 class="banner-title">PROGETTAZIONE PROFESSIONALE</h2>
+        <p class="banner-text">Selezioniamo solo componenti hardware stabili e ad alte prestazioni. Che si tratti di compilazione software massiva, rendering 3D intensivo o calcolo scientifico, i nostri componenti garantiscono l'affidabilità richiesta per il lavoro professionale.</p>
+        <p class="banner-text">Dalla dissipazione termica ottimizzata all'efficienza energetica della PSU, curiamo l'architettura dei componenti per darti una base solida e duratura.</p>
+    </div>
+</div>
+
 <div class="featured-section">
-    <h2 class="section-title">COMPONENTI IN EVIDENZA</h2>
-    <p class="section-desc">Le ultime aggiunte al nostro inventario hardware.</p>
+    <h2 class="section-title text-center componenti-popolari">I PIÙ VENDUTI</h2>
     
     {% if products %}
         <div class="product-grid-3">
             {% for product in products %}
                 <a href="{% url 'shop:product_detail' product.id %}" class="product-card">
                     <div class="card-image">
-                        {% if product.image_url %}
-                            <img src="{{ product.image_url }}" alt="{{ product.name }}">
+                        {% if product.image %}
+                            <img src="{{ product.image.url }}?t={% now 'U' %}" alt="{{ product.name }}">
                         {% else %}
                             <div class="placeholder-img">NESSUNA IMMAGINE</div>
                         {% endif %}
@@ -48,14 +88,14 @@
     {% endif %}
 </div>
 
-<div class="info-banner">
+<div class="info-banner reverse" style="margin-top: 5rem; margin-bottom: 2rem;">
     <div class="banner-image">
-        <img src="https://images.unsplash.com/photo-1587202372775-e229f172b9d7?q=80&w=500&auto=format&fit=crop" alt="PC Hardware Build">
+        <img src="https://images.unsplash.com/photo-1542751371-adc38448a05e?q=80&w=500&auto=format&fit=crop" alt="PC Gaming Community and Support">
     </div>
     <div class="banner-content">
-        <h2 class="banner-title">PROGETTAZIONE RETRO-FUTURISTICA</h2>
-        <p class="banner-text">Selezioniamo solo componenti hardware stabili e ad alte prestazioni. Che si tratti di compilazione software massiva, rendering 3D intensivo o calcolo scientifico, i nostri componenti garantiscono l'affidabilità richiesta per il lavoro professionale.</p>
-        <p class="banner-text">Dalla dissipazione termica ottimizzata all'efficienza energetica della PSU, curiamo l'architettura dei componenti per darti una base solida.</p>
+        <h2 class="banner-title">SUPPORTO E COMMUNITY</h2>
+        <p class="banner-text">Non ti lasciamo solo dopo l'acquisto. La nostra community di appassionati e tecnici è a tua disposizione per consigli sul cablaggio, ottimizzazione del flusso d'aria o per risolvere qualsiasi dubbio di assemblaggio.</p>
+        <p class="banner-text">Ogni componente hardware acquistato sul nostro store è coperto da supporto tecnico diretto per l'installazione e una garanzia di compatibilità certificata dai nostri esperti.</p>
     </div>
 </div>
 {% endblock %}

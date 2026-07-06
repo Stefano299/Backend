@@ -1,16 +1,19 @@
 from django import forms
 from .models import Product, Category, Order, Review
 
+class CustomClearableFileInput(forms.ClearableFileInput):
+    template_name = 'shop/widgets/custom_clearable_file_input.html'
+
 class ProductForm(forms.ModelForm):
     class Meta:
         model = Product
-        fields = ['name', 'description', 'price', 'stock', 'image_url', 'categories']
+        fields = ['name', 'description', 'price', 'stock', 'image', 'categories']
         widgets = {
             'name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Nome del Prodotto'}),
             'description': forms.Textarea(attrs={'class': 'form-control', 'rows': 4, 'placeholder': 'Descrizione...'}),
             'price': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01', 'min': '0'}),
             'stock': forms.NumberInput(attrs={'class': 'form-control', 'min': '0'}),
-            'image_url': forms.URLInput(attrs={'class': 'form-control', 'placeholder': 'URL dell\'immagine'}),
+            'image': CustomClearableFileInput(attrs={'class': 'form-control'}),
             'categories': forms.CheckboxSelectMultiple(attrs={'class': 'category-checkboxes'}),
         }
 
