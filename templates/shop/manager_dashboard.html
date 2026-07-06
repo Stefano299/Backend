@@ -1,42 +1,77 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}Dashboard Manager - PC Parts Builder{% endblock %}
+{% block title %}{% if user.is_staff or perms.shop.add_category %}Dashboard Manager{% else %}Dashboard Venditore{% endif %} - PC Parts Builder{% endblock %}
 
 {% block css %}
-    <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
+    <link rel="stylesheet" href="{% static 'css/dashboard.css' %}?v=1.1">
 {% endblock %}
 
 {% block content %}
 <div class="dashboard-container">
     <div class="dashboard-header">
         <div>
-            <h1>Dashboard Manager</h1>
-            <p>Pannello di controllo del negozio. Gestisci prodotti, categorie e ordini dei clienti.</p>
+            <h1>{% if user.is_staff or perms.shop.add_category %}Dashboard Manager{% else %}Dashboard Venditore{% endif %}</h1>
+            <p>{% if user.is_staff or perms.shop.add_category %}Pannello di controllo del negozio. Gestisci prodotti, categorie e ordini dei clienti.{% else %}Pannello di controllo venditore. Gestisci i tuoi prodotti nel catalogo.{% endif %}</p>
         </div>
     </div>
 
+    <!-- SEZIONE WALLET (solo per Venditori) -->
+    {% if not is_manager and user.wallet_balance is not None %}
+        <div class="dashboard-section dashboard-wallet-container">
+            <div class="wallet-header">
+                <div>
+                    <h2 class="wallet-title">Mio Portafoglio</h2>
+                    <p class="wallet-subtitle">Saldo disponibile maturato dalle vendite dei tuoi prodotti.</p>
+                </div>
+                <div class="wallet-balance">
+                    €{{ user.wallet_balance }}
+                </div>
+            </div>
+            
+            <!-- Notifiche di trasferimento -->
+            {% if wallet_success %}
+                <div class="wallet-alert wallet-alert-success">
+                    {{ wallet_success }}
+                </div>
+            {% endif %}
+            {% if wallet_error %}
+                <div class="wallet-alert wallet-alert-error">
+                    {{ wallet_error }}
+                </div>
+            {% endif %}
+            
+            <!-- Form per trasferimento wallet -->
+            <form action="{% url 'shop:transfer_wallet' %}" method="post" class="wallet-transfer-form">
+                {% csrf_token %}
+                <label for="amount" class="wallet-form-label">Trasferisci fondi (€):</label>
+                <input type="number" step="0.01" min="0.01" max="{{ user.wallet_balance }}" name="amount" id="amount" placeholder="0.00" required class="wallet-form-input">
+                <button type="submit" class="btn-dashboard btn-add wallet-submit-btn">Trasferisci sul Conto</button>
+            </form>
+        </div>
+    {% endif %}
+
     <!-- SEZIONE PRODOTTI -->
-    <details class="dashboard-section">
+    <details open class="dashboard-section">
         <summary class="section-header">
             <h2>Gestione Prodotti</h2>
-            <div style="display: flex; gap: 1rem; align-items: center;">
-                <input type="text" placeholder="Cerca prodotto..." data-search-table="products-table" class="form-input" style="width: 200px; padding: 0.4rem; font-size: 0.85rem; margin: 0;">
+            <div class="section-header-actions">
+                <input type="text" placeholder="Cerca prodotto..." data-search-table="products-table" class="form-input">
                 <a href="{% url 'shop:product_create' %}" class="btn-dashboard btn-add">+ Aggiungi Prodotto</a>
             </div>
         </summary>
         
-        <div style="overflow-x: auto;">
+        <div class="table-container">
             <table class="dashboard-table" id="products-table">
                 <thead>
                     <tr>
-                        <th style="width: 60px;">Foto</th>
-                        <th style="width: 80px;">ID</th>
+                        <th class="col-width-60">Foto</th>
+                        <th class="col-width-80">ID</th>
                         <th>Nome</th>
                         <th>Prezzo</th>
                         <th>Stock</th>
                         <th>Categorie</th>
-                        <th style="width: 180px;">Azioni</th>
+                        <th class="col-width-180">Azioni</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -46,22 +81,22 @@
                                 {% if product.image_url %}
                                     <img src="{{ product.image_url }}" alt="{{ product.name }}" class="table-img">
                                 {% else %}
-                                    <div class="table-img" style="display: flex; align-items: center; justify-content: center; font-size: 0.6rem; color: #52525b;">N/D</div>
+                                    <div class="table-img table-img-placeholder">N/D</div>
                                 {% endif %}
                             </td>
                             <td>#{{ product.id }}</td>
                             <td><strong>{{ product.name }}</strong></td>
                             <td>€{{ product.price }}</td>
                             <td>
-                                <span style="{% if product.stock == 0 %}color: #f87171; font-weight: bold;{% endif %}">
+                                <span class="{% if product.stock == 0 %}stock-out{% endif %}">
                                     {{ product.stock }} pz
                                 </span>
                             </td>
                             <td>
                                 {% for category in product.categories.all %}
-                                    <span style="color: #cbd5e1; border: 1px solid #52525b; padding: 0.1rem 0.4rem; font-size: 0.75rem; border-radius: 2px;">{{ category.name }}</span>
+                                    <span class="category-tag">{{ category.name }}</span>
                                 {% empty %}
-                                    <span style="color: #71717a; font-style: italic;">Nessuna</span>
+                                    <span class="text-muted-italic">Nessuna</span>
                                 {% endfor %}
                             </td>
                             <td class="actions">
@@ -71,7 +106,50 @@
                         </tr>
                     {% empty %}
                         <tr>
-                            <td colspan="7" style="text-align: center; color: #71717a; font-style: italic; padding: 2rem;">Nessun prodotto presente nel catalogo.</td>
+                            <td colspan="7" class="empty-table-msg">Nessun prodotto presente nel catalogo.</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </details>
+
+    <!-- SEZIONE VENDITE EFFETTUATE (acquistati dagli altri) -->
+    <details open class="dashboard-section">
+        <summary class="section-header">
+            <h2>{% if is_manager %}Rapporto Vendite Totali{% else %}Prodotti Venduti{% endif %}</h2>
+            <div class="section-header-actions">
+                <input type="text" placeholder="Cerca vendite..." data-search-table="sales-table" class="form-input">
+            </div>
+        </summary>
+        
+        <div class="table-container">
+            <table class="dashboard-table" id="sales-table">
+                <thead>
+                    <tr>
+                        <th class="col-width-100">ID Ordine</th>
+                        <th>Prodotto</th>
+                        <th>Acquirente</th>
+                        <th>Quantità</th>
+                        <th>Prezzo Unitario</th>
+                        <th>Totale Ricavo</th>
+                        <th>Data Vendita</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for sale in sales %}
+                        <tr>
+                            <td><strong>#{{ sale.order.id }}</strong></td>
+                            <td>{{ sale.product.name }}</td>
+                            <td>{{ sale.order.user.username }}</td>
+                            <td>{{ sale.quantity }} pz</td>
+                            <td>€{{ sale.price }}</td>
+                            <td class="sale-revenue">€{{ sale.get_cost }}</td>
+                            <td>{{ sale.order.created|date:"d M Y H:i" }}</td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="7" class="empty-table-msg">Nessuna vendita registrata.</td>
                         </tr>
                     {% endfor %}
                 </tbody>
@@ -80,22 +158,23 @@
     </details>
 
     <!-- SEZIONE CATEGORIE -->
-    <details class="dashboard-section">
+    {% if user.is_staff or perms.shop.add_category %}
+    <details open class="dashboard-section">
         <summary class="section-header">
             <h2>Gestione Categorie</h2>
-            <div style="display: flex; gap: 1rem; align-items: center;">
-                <input type="text" placeholder="Cerca categoria..." data-search-table="categories-table" class="form-input" style="width: 200px; padding: 0.4rem; font-size: 0.85rem; margin: 0;">
+            <div class="section-header-actions">
+                <input type="text" placeholder="Cerca categoria..." data-search-table="categories-table" class="form-input">
                 <a href="{% url 'shop:category_create' %}" class="btn-dashboard btn-add">+ Aggiungi Categoria</a>
             </div>
         </summary>
         
-        <div style="overflow-x: auto;">
+        <div class="table-container">
             <table class="dashboard-table" id="categories-table">
                 <thead>
                     <tr>
-                        <th style="width: 100px;">ID</th>
+                        <th class="col-width-100">ID</th>
                         <th>Nome Categoria</th>
-                        <th style="width: 180px;">Azioni</th>
+                        <th class="col-width-180">Azioni</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -110,33 +189,35 @@
                         </tr>
                     {% empty %}
                         <tr>
-                            <td colspan="3" style="text-align: center; color: #71717a; font-style: italic; padding: 2rem;">Nessuna categoria creata.</td>
+                            <td colspan="3" class="empty-table-msg">Nessuna categoria creata.</td>
                         </tr>
                     {% endfor %}
                 </tbody>
             </table>
         </div>
     </details>
+    {% endif %}
 
     <!-- SEZIONE ORDINI -->
-    <details class="dashboard-section">
+    {% if user.is_staff or perms.shop.add_category %}
+    <details open class="dashboard-section">
         <summary class="section-header">
             <h2>Gestione Ordini</h2>
-            <div style="display: flex; gap: 1rem; align-items: center;">
-                <input type="text" placeholder="Cerca ordini..." data-search-table="orders-table" class="form-input" style="width: 200px; padding: 0.4rem; font-size: 0.85rem; margin: 0;">
+            <div class="section-header-actions">
+                <input type="text" placeholder="Cerca ordini..." data-search-table="orders-table" class="form-input">
             </div>
         </summary>
         
-        <div style="overflow-x: auto;">
+        <div class="table-container">
             <table class="dashboard-table" id="orders-table">
                 <thead>
                     <tr>
-                        <th style="width: 100px;">ID Ordine</th>
+                        <th class="col-width-100">ID Ordine</th>
                         <th>Cliente</th>
                         <th>Data</th>
                         <th>Stato Spedizione</th>
                         <th>Totale</th>
-                        <th style="width: 180px;">Azioni</th>
+                        <th class="col-width-180">Azioni</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -146,7 +227,7 @@
                             <td>{{ order.user.username }}</td>
                             <td>{{ order.created|date:"d M Y H:i" }}</td>
                             <td>
-                                <span style="color: #f59e0b; border: 1px solid #d97706; padding: 0.1rem 0.4rem; font-size: 0.75rem; border-radius: 2px; text-transform: uppercase;">
+                                <span class="shipping-status-badge">
                                     {{ order.get_shipping_status_display }}
                                 </span>
                             </td>
@@ -158,13 +239,14 @@
                         </tr>
                     {% empty %}
                         <tr>
-                            <td colspan="6" style="text-align: center; color: #71717a; font-style: italic; padding: 2rem;">Nessun ordine ricevuto finora.</td>
+                            <td colspan="6" class="empty-table-msg">Nessun ordine ricevuto finora.</td>
                         </tr>
                     {% endfor %}
                 </tbody>
             </table>
         </div>
     </details>
+    {% endif %}
 </div>
 
 <script src="{% static 'js/dashboard.js' %}"></script>

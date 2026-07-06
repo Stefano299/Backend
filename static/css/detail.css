@@ -47,6 +47,31 @@
     margin: 0 0 1rem 0;
 }
 
+.product-rating-summary {
+    margin-bottom: 1.2rem;
+    display: flex;
+    align-items: center;
+    font-size: 1.05rem;
+}
+
+.rating-stars {
+    color: #f59e0b;
+    font-size: 1.25rem;
+    letter-spacing: 2px;
+}
+
+.rating-value {
+    color: #a1a1aa;
+    margin-left: 0.6rem;
+    font-family: monospace;
+}
+
+.rating-no-reviews {
+    color: #71717a;
+    font-style: italic;
+    font-size: 0.95rem;
+}
+
 .tags {
     display: flex;
     gap: 0.5rem;
@@ -187,5 +212,179 @@
     }
     .product-gallery {
         max-width: 100%;
+    }
+}
+
+/* Reviews Section */
+.reviews-section {
+    margin-top: 3rem;
+    border-top: 1px solid #27272a;
+    padding-top: 2rem;
+}
+
+.reviews-title {
+    color: #f59e0b !important;
+    font-size: 2rem;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    margin-bottom: 2rem;
+    border-bottom: 2px solid #f59e0b;
+    padding-bottom: 0.5rem;
+    font-weight: bold;
+}
+
+.add-review-form {
+    background: #1a1a1a;
+    border: 1px solid #27272a;
+    padding: 2.5rem;
+    border-radius: 4px;
+    margin-bottom: 3rem;
+}
+
+.add-review-form h3 {
+    color: #f59e0b;
+    margin-top: 0;
+    margin-bottom: 0.75rem;
+    font-size: 1.5rem;
+    text-transform: uppercase;
+}
+
+.add-review-form .form-group {
+    margin-bottom: 1rem;
+}
+
+/* Star Rating Style */
+.star-rating {
+    display: inline-flex;
+    flex-direction: row-reverse;
+    font-size: 3.5rem;
+    justify-content: flex-end;
+    margin-bottom: 0.25rem;
+}
+
+.star-rating input {
+    display: none !important;
+}
+
+.star-rating label {
+    color: #f59e0b !important;
+    cursor: pointer;
+    transition: transform 0.1s ease-in-out;
+    padding: 0 0.2rem;
+}
+
+.star-rating label:hover {
+    transform: scale(1.15);
+}
+
+.star-rating label::before {
+    content: "☆";
+}
+
+.star-rating label:hover::before,
+.star-rating label:hover ~ label::before,
+.star-rating input:checked ~ label::before {
+    content: "★";
+    color: #f59e0b !important;
+}
+
+.add-review-form textarea.form-control {
+    width: 100%;
+    background-color: #121212 !important;
+    border: 2px solid #f59e0b !important;
+    color: #e4e4e7 !important;
+    padding: 1.2rem;
+    border-radius: 4px;
+    font-family: inherit;
+    box-sizing: border-box;
+    font-size: 1.1rem;
+    line-height: 1.6;
+    resize: vertical;
+    min-height: 150px;
+    transition: box-shadow 0.15s ease-in-out;
+}
+
+.add-review-form textarea.form-control:focus {
+    outline: none;
+    box-shadow: 0 0 10px rgba(245, 158, 11, 0.4);
+}
+
+.review-status-msg {
+    color: #a1a1aa;
+    font-style: italic;
+    margin-bottom: 2rem;
+    font-size: 1.1rem;
+}
+
+.reviews-list {
+    margin-top: 2rem;
+}
+
+.review-item {
+    background: #1a1a1a;
+    border: 1px solid #27272a;
+    padding: 1.5rem;
+    border-radius: 2px;
+    margin-bottom: 1rem;
+}
+
+.review-item-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.8rem;
+}
+
+.review-item-user {
+    font-weight: 700;
+    color: #f59e0b;
+}
+
+.review-item-rating {
+    color: #f59e0b;
+    font-size: 1.2rem;
+}
+
+.review-item-comment {
+    margin: 0;
+    color: #cbd5e1;
+    line-height: 1.6;
+    margin-bottom: 0.8rem;
+}
+
+.review-item-date {
+    color: #71717a;
+    font-size: 0.8rem;
+}
+
+.star-icon {
+    display: inline-block;
+    vertical-align: middle;
+    margin-right: 2px;
+}
+
+.product-rating-summary .star-icon {
+    width: 20px;
+    height: 20px;
+}
+
+.review-item-rating .star-icon {
+    width: 16px;
+    height: 16px;
+}
+
+.star-icon.filled {
+    fill: #f59e0b;
+}
+
+.star-icon.empty {
+    fill: none;
+    stroke: #f59e0b;
+    stroke-width: 2;
+}
+
+@media (min-width: 768px) {
+    .reviews-list, .add-review-form {
+        width: 50%;
     }
 }

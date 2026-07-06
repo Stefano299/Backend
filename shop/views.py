@@ -7,9 +7,9 @@ from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.views.generic import TemplateView
 from django.views import View
 from django.http import Http404
-from .models import Product, Category, Order, OrderItem
+from .models import Product, Category, Order, OrderItem, Review
 from .cart import Cart
-from .forms import CartAddProductForm, OrderCreateForm, ProductForm, CategoryForm, OrderEditForm
+from .forms import CartAddProductForm, OrderCreateForm, ProductForm, CategoryForm, OrderEditForm, ReviewForm
 
 
 def product_list(request):
@@ -57,10 +57,63 @@ def product_list(request):
 def product_detail(request, pk):
     product = get_object_or_404(Product, pk=pk)
     cart_product_form = CartAddProductForm()
+    
+    # Carica le recensioni per questo prodotto
+    reviews = product.reviews.all().order_by('-created_at')
+    
+    # Calcola la media delle recensioni
+    if reviews.exists():
+        from django.db.models import Avg
+        avg_rating = reviews.aggregate(Avg('rating'))['rating__avg']
+        avg_rating = round(avg_rating, 1)
+        stars_filled = range(int(round(avg_rating)))
+        stars_empty = range(5 - int(round(avg_rating)))
+    else:
+        avg_rating = None
+        stars_filled = None
+        stars_empty = None
+    
+    # Verifica se l'utente può inserire una recensione (ha comprato il prodotto e non ha già recensito)
+    can_review = False
+    already_reviewed = False
+    if request.user.is_authenticated:
+        has_purchased = OrderItem.objects.filter(order__user=request.user, product=product).exists()
+        already_reviewed = Review.objects.filter(product=product, user=request.user).exists()
+        can_review = has_purchased and not already_reviewed
+        
+    review_form = ReviewForm()
+    
     return render(request, "shop/detail.html", {
         "product": product,
-        "cart_product_form": cart_product_form
+        "cart_product_form": cart_product_form,
+        "reviews": reviews,
+        "can_review": can_review,
+        "already_reviewed": already_reviewed,
+        "review_form": review_form,
+        "avg_rating": avg_rating,
+        "stars_filled": stars_filled,
+        "stars_empty": stars_empty
     })
+
+@login_required
+def add_review(request, product_id):
+    product = get_object_or_404(Product, id=product_id)
+    # Verifica che l'utente abbia acquistato e non abbia già inserito una recensione
+    has_purchased = OrderItem.objects.filter(order__user=request.user, product=product).exists()
+    already_reviewed = Review.objects.filter(product=product, user=request.user).exists()
+    
+    if not has_purchased or already_reviewed:
+        raise PermissionDenied("Non puoi recensire questo prodotto.")
+        
+    if request.method == 'POST':
+        form = ReviewForm(request.POST)
+        if form.is_valid():
+            review = form.save(commit=False)
+            review.product = product
+            review.user = request.user
+            review.save()
+            
+    return redirect('shop:product_detail', pk=product.id)
 
 def cart_add(request, product_id):
     if request.method == 'POST':
@@ -128,12 +181,20 @@ def checkout(request):
             
             for item in cart:
                 # Crea un order item per ogni prodotto nel carrello
+                product = item['product']
+                price = item['price']
+                quantity = item['quantity']
                 OrderItem.objects.create(
                     order=order,
-                    product=item['product'],
-                    price=item['price'],
-                    quantity=item['quantity']
+                    product=product,
+                    price=price,
+                    quantity=quantity
                 )
+                # Se il prodotto ha un venditore associato, accreditiamo il ricavo nel suo wallet
+                if product.seller:
+                    seller = product.seller
+                    seller.wallet_balance += price * quantity
+                    seller.save()
             
             cart.clear()
             return redirect('shop:order_created', order_id=order.id)
@@ -171,10 +232,12 @@ def order_detail(request, order_id):
     return render(request, 'shop/order_detail.html', {'order': order})
 
 
-# --- Manager Dashboard Views ---
 from django.core.exceptions import PermissionDenied
 from django.contrib.auth.decorators import login_required
 from functools import wraps
+
+# Queste due funzioni (fatte da IA), mi permettono di controllare i permessi in modo semplice.
+# Sennò avrei usato degli if all'interno delle funzioni
 
 def manager_required(view_func):
     @wraps(view_func)
@@ -185,32 +248,93 @@ def manager_required(view_func):
         return view_func(request, *args, **kwargs)
     return _wrapped_view
 
-@manager_required
+def seller_or_manager_required(view_func):
+    @wraps(view_func)
+    @login_required
+    def _wrapped_view(request, *args, **kwargs):
+        if not (request.user.is_staff or request.user.groups.filter(name__in=['Store Manager', 'Seller']).exists()):
+            raise PermissionDenied("Accesso negato. Questa sezione è riservata a manager e venditori.")
+        return view_func(request, *args, **kwargs)
+    return _wrapped_view
+
+@seller_or_manager_required
 def manager_dashboard(request):
-    products = Product.objects.all()
+    is_manager = request.user.is_staff or request.user.groups.filter(name='Store Manager').exists()
+    
+    if not is_manager and request.user.groups.filter(name='Seller').exists():
+        # Il venditore vede solo i propri prodotti
+        products = Product.objects.filter(seller=request.user)
+        # Prodotti venduti (acquistati dagli altri)
+        sales = OrderItem.objects.filter(product__seller=request.user).order_by('-order__created')
+    else:
+        products = Product.objects.all()
+        # Per il manager, mostra tutti gli ordini registrati
+        sales = OrderItem.objects.all().order_by('-order__created')
+        
     categories = Category.objects.all()
     orders = Order.objects.all().order_by('-created')
+    
+    wallet_success = request.session.pop('wallet_success', None)
+    wallet_error = request.session.pop('wallet_error', None)
+    
     return render(request, 'shop/manager_dashboard.html', {
         'products': products,
         'categories': categories,
-        'orders': orders
+        'orders': orders,
+        'sales': sales,
+        'is_manager': is_manager,
+        'wallet_success': wallet_success,
+        'wallet_error': wallet_error
     })
 
+@login_required
+def transfer_wallet(request):
+    if request.method == 'POST':
+        try:
+            from decimal import Decimal
+            amount = Decimal(request.POST.get('amount', '0'))
+            if amount <= 0:
+                raise ValueError()
+        except (ValueError, TypeError):
+            request.session['wallet_error'] = "Importo non valido."
+            return redirect('shop:manager_dashboard')
+            
+        user = request.user
+        if user.wallet_balance >= amount:
+            user.wallet_balance -= amount
+            user.save()
+            request.session['wallet_success'] = f"Trasferimento di €{amount} completato con successo!"
+        else:
+            request.session['wallet_error'] = "Fondi insufficienti nel wallet."
+            
+    return redirect('shop:manager_dashboard')
+
 # --- Prodotti ---
-@manager_required
+@seller_or_manager_required
 def product_create(request):
     if request.method == 'POST':
         form = ProductForm(request.POST)
         if form.is_valid():
-            form.save()
+            product = form.save(commit=False)
+            # Assegna il venditore al prodotto (se l'utente è seller)
+            if request.user.groups.filter(name='Seller').exists():
+                product.seller = request.user
+            product.save()
+            form.save_m2m()
             return redirect('shop:manager_dashboard')
     else:
         form = ProductForm()
     return render(request, 'shop/entity_form.html', {'form': form, 'entity_title': 'Prodotto'})
 
-@manager_required
+@seller_or_manager_required
 def product_update(request, pk):
     product = get_object_or_404(Product, pk=pk)
+    
+    # Verifica che il venditore modifichi solo i propri prodotti
+    is_manager = request.user.is_staff or request.user.groups.filter(name='Store Manager').exists()
+    if not is_manager and product.seller != request.user:
+        raise PermissionDenied("Non hai i permessi per modificare questo prodotto.")
+        
     if request.method == 'POST':
         form = ProductForm(request.POST, instance=product)
         if form.is_valid():
@@ -220,9 +344,15 @@ def product_update(request, pk):
         form = ProductForm(instance=product)
     return render(request, 'shop/entity_form.html', {'form': form, 'entity_title': 'Prodotto'})
 
-@manager_required
+@seller_or_manager_required
 def product_delete(request, pk):
     product = get_object_or_404(Product, pk=pk)
+    
+    # Per sicurezza controllo sia is_staff che il gruppo
+    is_manager = request.user.is_staff or request.user.groups.filter(name='Store Manager').exists()
+    if not is_manager and product.seller != request.user:
+        raise PermissionDenied("Non puoi eliminare questo prodotto")
+        
     product.delete()
     return redirect('shop:manager_dashboard')
 

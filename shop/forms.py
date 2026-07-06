@@ -1,5 +1,5 @@
 from django import forms
-from .models import Product, Category, Order
+from .models import Product, Category, Order, Review
 
 class ProductForm(forms.ModelForm):
     class Meta:
@@ -62,6 +62,16 @@ class OrderEditForm(forms.ModelForm):
         fields = ['shipping_status']
         widgets = {
             'shipping_status': forms.Select(attrs={'class': 'form-control'}),
+        }
+
+
+class ReviewForm(forms.ModelForm):
+    class Meta:
+        model = Review
+        fields = ['rating', 'comment']
+        widgets = {
+            'rating': forms.Select(attrs={'class': 'form-control'}),
+            'comment': forms.Textarea(attrs={'class': 'form-control', 'rows': 3, 'placeholder': 'Scrivi la tua recensione...'}),
         }
 
 

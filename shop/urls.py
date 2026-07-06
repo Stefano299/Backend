@@ -6,6 +6,7 @@ app_name = "shop"
 urlpatterns = [
     path("catalog/", views.product_list, name="product_list"),
     path("products/<int:pk>/", views.product_detail, name="product_detail"),
+    path("products/<int:product_id>/review/", views.add_review, name="add_review"),
     path("cart/", views.cart_detail, name="cart_detail"),
     path("cart/add/<int:product_id>/", views.cart_add, name="cart_add"),
     path("cart/remove/<int:product_id>/", views.cart_remove, name="cart_remove"),
@@ -21,6 +22,7 @@ urlpatterns = [
     path("dashboard/product/add/", views.product_create, name="product_create"),
     path("dashboard/product/<int:pk>/edit/", views.product_update, name="product_update"),
     path("dashboard/product/<int:pk>/delete/", views.product_delete, name="product_delete"),
+    path("dashboard/wallet/transfer/", views.transfer_wallet, name="transfer_wallet"),
     
     # Categorie
     path("dashboard/category/add/", views.category_create, name="category_create"),

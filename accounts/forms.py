@@ -3,6 +3,18 @@ from django.contrib.auth.forms import UserCreationForm, UserChangeForm
 from .models import CustomUser
 
 class CustomUserCreationForm(UserCreationForm):
+    ROLE_CHOICES = [
+        ('customer', 'Acquirente (Customer)'),
+        ('seller', 'Venditore (Seller)'),
+    ]
+    role = forms.ChoiceField(
+        choices=ROLE_CHOICES,
+        widget=forms.Select(attrs={'class': 'form-control'}),
+        label='Registrati come',
+        initial='customer',
+        required=True
+    )
+
     class Meta(UserCreationForm.Meta):
         model = CustomUser
         fields = UserCreationForm.Meta.fields

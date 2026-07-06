@@ -49,16 +49,16 @@ class Cart:
         # Query per recuperare tutti i prodotti con quegli id
         products = Product.objects.filter(id__in=product_ids)
         
-        cart = self.cart.copy()
         for product in products:
-            # Si crea un dizionario annidato che contiene il prodotto preso dal database
-            cart[str(product.id)]['product'] = product
+            self.cart[str(product.id)]['product'] = product
 
         elementi_carrello = []
-        for item in cart.values():
-            item['price'] = Decimal(item['price'])
-            item['total_price'] = item['price'] * item['quantity']
-            elementi_carrello.append(item)
+        for item in self.cart.values():
+            # if che esclude quelli eliminati dal database
+            if 'product' in item:
+                item['price'] = Decimal(item['price'])
+                item['total_price'] = item['price'] * item['quantity']
+                elementi_carrello.append(item)
             
         return iter(elementi_carrello)
 

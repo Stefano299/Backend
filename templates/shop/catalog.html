@@ -4,7 +4,7 @@
 {% block title %}Catalogo Componenti - PC Parts Builder{% endblock %}
 
 {% block css %}
-    <link rel="stylesheet" href="{% static 'css/catalog.css' %}">
+    <link rel="stylesheet" href="{% static 'css/catalog.css' %}?v=1.2">
 {% endblock %}
 
 {% block content %}
@@ -66,6 +66,20 @@
                         </div>
                         <div class="card-content">
                             <h3 class="card-title">{{ product.name }}</h3>
+                            <div class="product-card-rating">
+                                {% if product.get_average_rating %}
+                                    <span class="rating-stars">
+                                        {% for i in product.get_stars_filled %}
+                                            <svg class="star-icon-catalog filled" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 .587l3.668 7.431 8.2 1.191-5.934 5.784 1.4 8.168L12 18.896l-7.334 3.854 1.4-8.168L.132 9.409l8.2-1.191z"/></svg>
+                                        {% endfor %}
+                                        {% for i in product.get_stars_empty %}
+                                            <svg class="star-icon-catalog empty" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 .587l3.668 7.431 8.2 1.191-5.934 5.784 1.4 8.168L12 18.896l-7.334 3.854 1.4-8.168L.132 9.409l8.2-1.191z"/></svg>
+                                        {% endfor %}
+                                    </span>
+                                {% else %}
+                                    <span class="rating-no-reviews-catalog">Nessuna recensione</span>
+                                {% endif %}
+                            </div>
                             <p class="card-desc">{{ product.description|truncatewords:15 }}</p>
                             <div class="card-bottom">
                                 <span class="card-price">€{{ product.price }}</span>
