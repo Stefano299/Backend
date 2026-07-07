@@ -10,12 +10,6 @@ class SignUpView(generic.CreateView):
     
     def form_valid(self, form):
         response = super().form_valid(form)
-
-        # Aggiunge nuovo utente al gruppo corretto
-        role = form.cleaned_data.get('role')
-        if role == 'seller':
-            group = Group.objects.get(name='Seller')
-        else:
-            group = Group.objects.get(name='Customer')
+        group, _ = Group.objects.get_or_create(name='Customer')
         self.object.groups.add(group)
         return response

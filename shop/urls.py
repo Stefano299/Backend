@@ -22,7 +22,7 @@ urlpatterns = [
     path("dashboard/product/add/", views.product_create, name="product_create"),
     path("dashboard/product/<int:pk>/edit/", views.product_update, name="product_update"),
     path("dashboard/product/<int:pk>/delete/", views.product_delete, name="product_delete"),
-    path("dashboard/wallet/transfer/", views.transfer_wallet, name="transfer_wallet"),
+
     
     # Categorie
     path("dashboard/category/add/", views.category_create, name="category_create"),
@@ -32,6 +32,7 @@ urlpatterns = [
     # Ordini
     path("dashboard/order/<int:pk>/edit/", views.order_update, name="order_update"),
     path("dashboard/order/<int:pk>/delete/", views.order_delete, name="order_delete"),
+    path("dashboard/review/<int:pk>/delete/", views.review_delete, name="review_delete"),
     
     # PC Building
     path("builder/step/<int:step>/", views.pc_builder_step, name="pc_builder_step"),

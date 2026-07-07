@@ -4,8 +4,8 @@ from .models import Product, Category, Order, OrderItem, Review
 
 @admin.register(Product)
 class ProductAdmin(admin.ModelAdmin):
-    list_display = ('name', 'price', 'stock', 'seller')
-    list_filter = ('categories', 'seller')
+    list_display = ('name', 'price', 'stock')
+    list_filter = ('categories',)
     search_fields = ('name', 'description')
 
 admin.site.register(Category)

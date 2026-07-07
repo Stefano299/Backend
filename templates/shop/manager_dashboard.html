@@ -1,55 +1,51 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}{% if user.is_staff or perms.shop.add_category %}Dashboard Manager{% else %}Dashboard Venditore{% endif %} - PC Parts Builder{% endblock %}
+{% block title %}Dashboard Manager - PC Parts Builder{% endblock %}
 
 {% block css %}
-    <link rel="stylesheet" href="{% static 'css/dashboard.css' %}?v=1.1">
+    <link rel="stylesheet" href="{% static 'css/dashboard.css' %}?v=1.2">
 {% endblock %}
 
 {% block content %}
 <div class="dashboard-container">
     <div class="dashboard-header">
         <div>
-            <h1>{% if user.is_staff or perms.shop.add_category %}Dashboard Manager{% else %}Dashboard Venditore{% endif %}</h1>
-            <p>{% if user.is_staff or perms.shop.add_category %}Pannello di controllo del negozio. Gestisci prodotti, categorie e ordini dei clienti.{% else %}Pannello di controllo venditore. Gestisci i tuoi prodotti nel catalogo.{% endif %}</p>
+            <h1>Dashboard Manager</h1>
+            <p>Pannello di controllo del negozio. Monitora le vendite, gestisci i prodotti, le categorie e gli ordini dei clienti.</p>
         </div>
     </div>
 
-    <!-- SEZIONE WALLET (solo per Venditori) -->
-    {% if not is_manager and user.wallet_balance is not None %}
-        <div class="dashboard-section dashboard-wallet-container">
-            <div class="wallet-header">
-                <div>
-                    <h2 class="wallet-title">Il Mio Portafoglio</h2>
-                    <p class="wallet-subtitle">Saldo disponibile in base alle vendite dei tuoi prodotti.</p>
-                </div>
-                <div class="wallet-balance">
-                    €{{ user.wallet_balance }}
-                </div>
+    <!-- SEZIONE METRICHE (KPIs) -->
+    <div class="dashboard-stats-grid">
+        <div class="stat-card">
+            <div class="stat-icon">
+                <img src="/media/dashboard/revenue.png" alt="Revenue Icon" class="stat-icon-img">
             </div>
-            
-            <!-- Notifiche di trasferimento -->
-            {% if wallet_success %}
-                <div class="wallet-alert wallet-alert-success">
-                    {{ wallet_success }}
-                </div>
-            {% endif %}
-            {% if wallet_error %}
-                <div class="wallet-alert wallet-alert-error">
-                    {{ wallet_error }}
-                </div>
-            {% endif %}
-            
-            <!-- Form per trasferimento wallet -->
-            <form action="{% url 'shop:transfer_wallet' %}" method="post" class="wallet-transfer-form">
-                {% csrf_token %}
-                <label for="amount" class="wallet-form-label">Trasferisci fondi (€):</label>
-                <input type="number" step="0.01" min="0.01" max="{{ user.wallet_balance }}" name="amount" id="amount" placeholder="0.00" required class="wallet-form-input">
-                <button type="submit" class="btn-dashboard btn-add wallet-submit-btn">Trasferisci sul Conto</button>
-            </form>
+            <div class="stat-info">
+                <span class="stat-label">Ricavi Totali</span>
+                <span class="stat-value">€{{ total_earnings }}</span>
+            </div>
         </div>
-    {% endif %}
+        <div class="stat-card">
+            <div class="stat-icon">
+                <img src="/media/dashboard/orders.png" alt="Orders Icon" class="stat-icon-img">
+            </div>
+            <div class="stat-info">
+                <span class="stat-label">Ordini Totali</span>
+                <span class="stat-value">{{ total_sales_count }}</span>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon">
+                <img src="/media/dashboard/clients.png" alt="Clients Icon" class="stat-icon-img">
+            </div>
+            <div class="stat-info">
+                <span class="stat-label">Clienti</span>
+                <span class="stat-value">{{ total_customers }}</span>
+            </div>
+        </div>
+    </div>
 
     <!-- SEZIONE PRODOTTI -->
     <details open class="dashboard-section">
@@ -114,11 +110,10 @@
         </div>
     </details>
 
-    <!-- SEZIONE VENDITE EFFETTUATE (acquistati dagli altri) -->
-    {% if not is_manager %}
+    <!-- SEZIONE VENDITE EFFETTUATE (History delle vendite) -->
     <details open class="dashboard-section">
         <summary class="section-header">
-            <h2>Prodotti Venduti</h2>
+            <h2>History delle Vendite</h2>
             <div class="section-header-actions">
                 <input type="text" placeholder="Cerca vendite..." data-search-table="sales-table" class="form-input">
             </div>
@@ -157,7 +152,6 @@
             </table>
         </div>
     </details>
-    {% endif %}
 
     <!-- SEZIONE CATEGORIE -->
     {% if user.is_staff or perms.shop.add_category %}
@@ -249,6 +243,53 @@
         </div>
     </details>
     {% endif %}
+
+    <!-- SEZIONE RECENSIONI -->
+    <details open class="dashboard-section">
+        <summary class="section-header">
+            <h2>Gestione Recensioni</h2>
+            <div class="section-header-actions">
+                <input type="text" placeholder="Cerca recensione..." data-search-table="reviews-table" class="form-input">
+            </div>
+        </summary>
+        
+        <div class="table-container">
+            <table class="dashboard-table" id="reviews-table">
+                <thead>
+                    <tr>
+                        <th>Prodotto</th>
+                        <th>Utente</th>
+                        <th>Valutazione</th>
+                        <th>Commento</th>
+                        <th>Data</th>
+                        <th class="col-width-100">Azioni</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for review in reviews %}
+                        <tr>
+                            <td>{{ review.product.name }}</td>
+                            <td><strong>{{ review.user.username }}</strong></td>
+                            <td>
+                                <span style="color: #f59e0b; font-weight: bold;">
+                                    {{ review.rating }} / 5
+                                </span>
+                            </td>
+                            <td>{{ review.comment }}</td>
+                            <td>{{ review.created_at|date:"d M Y H:i" }}</td>
+                            <td class="actions">
+                                <a href="{% url 'shop:review_delete' review.id %}" class="btn-dashboard btn-delete">Elimina</a>
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="6" class="empty-table-msg">Nessuna recensione presente nel database.</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </details>
 </div>
 
 <script src="{% static 'js/dashboard.js' %}"></script>

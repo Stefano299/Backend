@@ -190,11 +190,6 @@ def checkout(request):
                     price=price,
                     quantity=quantity
                 )
-                # Se il prodotto ha un venditore associato, accreditiamo il ricavo nel suo wallet
-                if product.seller:
-                    seller = product.seller
-                    seller.wallet_balance += price * quantity
-                    seller.save()
             
             cart.clear()
             return redirect('shop:order_created', order_id=order.id)
@@ -248,77 +243,45 @@ def manager_required(view_func):
         return view_func(request, *args, **kwargs)
     return _wrapped_view
 
-def seller_or_manager_required(view_func):
-    @wraps(view_func)
-    @login_required
-    def _wrapped_view(request, *args, **kwargs):
-        if not (request.user.is_staff or request.user.groups.filter(name__in=['Store Manager', 'Seller']).exists()):
-            raise PermissionDenied("Accesso negato. Questa sezione è riservata a manager e venditori.")
-        return view_func(request, *args, **kwargs)
-    return _wrapped_view
-
-@seller_or_manager_required
+@manager_required
 def manager_dashboard(request):
-    is_manager = request.user.is_staff or request.user.groups.filter(name='Store Manager').exists()
-    
-    if not is_manager and request.user.groups.filter(name='Seller').exists():
-        # Il venditore vede solo i propri prodotti
-        products = Product.objects.filter(seller=request.user)
-        # Prodotti venduti (acquistati dagli altri)
-        sales = OrderItem.objects.filter(product__seller=request.user).order_by('-order__created')
-    else:
-        products = Product.objects.all()
-        # Per il manager, mostra tutti gli ordini registrati
-        sales = OrderItem.objects.all().order_by('-order__created')
-        
+    if request.user.is_superuser:
+        return redirect('admin:index')
+    products = Product.objects.all()
     categories = Category.objects.all()
     orders = Order.objects.all().order_by('-created')
+    sales = OrderItem.objects.all().order_by('-order__created')
+    reviews = Review.objects.all().order_by('-created_at')
     
-    wallet_success = request.session.pop('wallet_success', None)
-    wallet_error = request.session.pop('wallet_error', None)
+    # Calculate metrics for the manager/admin
+    total_sales_count = orders.count()
+    
+    # Total revenue/earnings
+    total_earnings = sum(item.price * item.quantity for item in sales)
+    
+    # Total customers (users that are not staff and not managers)
+    from django.contrib.auth import get_user_model
+    User = get_user_model()
+    total_customers = User.objects.filter(is_staff=False).exclude(groups__name='Store Manager').count()
     
     return render(request, 'shop/manager_dashboard.html', {
         'products': products,
         'categories': categories,
         'orders': orders,
         'sales': sales,
-        'is_manager': is_manager,
-        'wallet_success': wallet_success,
-        'wallet_error': wallet_error
+        'reviews': reviews,
+        'total_sales_count': total_sales_count,
+        'total_earnings': total_earnings,
+        'total_customers': total_customers,
     })
 
-@login_required
-def transfer_wallet(request):
-    if request.method == 'POST':
-        try:
-            from decimal import Decimal
-            amount = Decimal(request.POST.get('amount', '0'))
-            if amount <= 0:
-                raise ValueError()
-        except (ValueError, TypeError):
-            request.session['wallet_error'] = "Importo non valido."
-            return redirect('shop:manager_dashboard')
-            
-        user = request.user
-        if user.wallet_balance >= amount:
-            user.wallet_balance -= amount
-            user.save()
-            request.session['wallet_success'] = f"Trasferimento di €{amount} completato con successo!"
-        else:
-            request.session['wallet_error'] = "Fondi insufficienti nel wallet."
-            
-    return redirect('shop:manager_dashboard')
-
 # --- Prodotti ---
-@seller_or_manager_required
+@manager_required
 def product_create(request):
     if request.method == 'POST':
         form = ProductForm(request.POST, request.FILES)
         if form.is_valid():
             product = form.save(commit=False)
-            # Assegna il venditore al prodotto (se l'utente è seller)
-            if request.user.groups.filter(name='Seller').exists():
-                product.seller = request.user
             product.save()
             form.save_m2m()
             return redirect('shop:manager_dashboard')
@@ -326,15 +289,10 @@ def product_create(request):
         form = ProductForm()
     return render(request, 'shop/entity_form.html', {'form': form, 'entity_title': 'Prodotto'})
 
-@seller_or_manager_required
+@manager_required
 def product_update(request, pk):
     product = get_object_or_404(Product, pk=pk)
     
-    # Verifica che il venditore modifichi solo i propri prodotti
-    is_manager = request.user.is_staff or request.user.groups.filter(name='Store Manager').exists()
-    if not is_manager and product.seller != request.user:
-        raise PermissionDenied("Non hai i permessi per modificare questo prodotto.")
-        
     if request.method == 'POST':
         form = ProductForm(request.POST, request.FILES, instance=product)
         if form.is_valid():
@@ -344,16 +302,16 @@ def product_update(request, pk):
         form = ProductForm(instance=product)
     return render(request, 'shop/entity_form.html', {'form': form, 'entity_title': 'Prodotto'})
 
-@seller_or_manager_required
+@manager_required
 def product_delete(request, pk):
     product = get_object_or_404(Product, pk=pk)
-    
-    # Per sicurezza controllo sia is_staff che il gruppo
-    is_manager = request.user.is_staff or request.user.groups.filter(name='Store Manager').exists()
-    if not is_manager and product.seller != request.user:
-        raise PermissionDenied("Non puoi eliminare questo prodotto")
-        
     product.delete()
+    return redirect('shop:manager_dashboard')
+
+@manager_required
+def review_delete(request, pk):
+    review = get_object_or_404(Review, pk=pk)
+    review.delete()
     return redirect('shop:manager_dashboard')
 
 # --- Categorie ---
