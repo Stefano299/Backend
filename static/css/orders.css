@@ -352,4 +352,37 @@
         border-top: 1px solid #27272a;
         padding-top: 1.5rem;
     }
+    .info-grid {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+}
+
+.table-responsive {
+    overflow-x: auto;
+    width: 100%;
+    -webkit-overflow-scrolling: touch;
+}
+
+@media (max-width: 576px) {
+    .order-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+    }
+    .order-card {
+        padding: 1rem;
+    }
+    .order-info-card, .products-card, .timeline-card {
+        padding: 1.25rem;
+    }
+    .product-cell {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+    }
+    .product-img {
+        width: 80px;
+        height: 80px;
+    }
 }

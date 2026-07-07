@@ -1,3 +1,7 @@
+*, *::before, *::after {
+    box-sizing: border-box;
+}
+
 body {
     font-family: 'Courier New', Courier, monospace;
     background-color: #121212;
@@ -42,10 +46,15 @@ a:hover {
     font-weight: 700;
     color: #f59e0b;
     text-transform: uppercase;
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
 }
 
-.brand::before {
-    content: "> ";
+.brand-logo {
+    height: 40px;
+    width: auto;
+    object-fit: contain;
 }
 
 .nav-links {
@@ -132,4 +141,128 @@ a:hover {
 img {
     max-width: 100%;
     height: auto;
+}
+
+/* Nav toggle button styling */
+.nav-toggle {
+    display: none;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0.5rem;
+    z-index: 1100;
+}
+
+.hamburger {
+    display: block;
+    width: 24px;
+    height: 2px;
+    background-color: #f59e0b;
+    position: relative;
+    transition: background-color 0.2s ease-in-out;
+}
+
+.hamburger::before,
+.hamburger::after {
+    content: '';
+    position: absolute;
+    width: 24px;
+    height: 2px;
+    background-color: #f59e0b;
+    transition: transform 0.2s ease-in-out, top 0.2s ease-in-out;
+}
+
+.hamburger::before {
+    top: -8px;
+    left: 0;
+}
+
+.hamburger::after {
+    top: 8px;
+    left: 0;
+}
+
+/* Active hamburger states */
+.nav-toggle.active .hamburger {
+    background-color: transparent;
+}
+
+.nav-toggle.active .hamburger::before {
+    transform: rotate(45deg);
+    top: 0;
+}
+
+.nav-toggle.active .hamburger::after {
+    transform: rotate(-45deg);
+    top: 0;
+}
+
+/* Body lock when nav is open */
+body.nav-open {
+    overflow: hidden;
+}
+
+/* Mobile responsive styles */
+@media (max-width: 992px) {
+    .nav-toggle {
+        display: block;
+    }
+
+    .nav-links {
+        position: fixed;
+        top: 0;
+        right: -100%;
+        width: 300px;
+        max-width: 85%;
+        height: 100vh;
+        background-color: #1a1a1a;
+        border-left: 2px solid #f59e0b;
+        flex-direction: column;
+        align-items: flex-start;
+        justify-content: flex-start;
+        padding: 6rem 2rem 2rem 2rem;
+        gap: 1.5rem;
+        transition: right 0.3s ease-in-out;
+        z-index: 1050;
+        box-shadow: -5px 0 25px rgba(0, 0, 0, 0.6);
+        box-sizing: border-box;
+        overflow-y: auto;
+    }
+
+    .nav-links.active {
+        right: 0;
+    }
+
+    .nav-links a, 
+    .nav-links .user-info {
+        font-size: 1.1rem;
+        width: 100%;
+        padding: 0.5rem 0;
+        border-bottom: 1px solid #27272a;
+    }
+
+    .nav-links .user-info {
+        border-bottom-style: dashed;
+    }
+
+    .nav-links .inline-form {
+        width: 100%;
+        display: block;
+    }
+
+    .nav-links .btn-logout {
+        width: 100%;
+        text-align: center;
+        padding: 0.6rem;
+        font-size: 1rem;
+    }
+
+    .nav-links .btn-primary {
+        display: block;
+        width: 100%;
+        text-align: center;
+        padding: 0.6rem;
+        box-sizing: border-box;
+        margin-top: 0.5rem;
+    }
 }

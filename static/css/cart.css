@@ -228,3 +228,37 @@
         align-items: flex-start;
     }
 }
+
+@media (max-width: 500px) {
+    .cart-item {
+        padding: 1rem;
+        gap: 1rem;
+        width: 100%;
+        box-sizing: border-box;
+    }
+    .item-img {
+        width: 100px;
+        height: 100px;
+        align-self: center;
+    }
+    .item-details {
+        width: 100%;
+    }
+    .item-actions {
+        width: 100%;
+        flex-direction: row;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 1rem;
+        border-top: 1px solid #27272a;
+        padding-top: 1rem;
+    }
+    .item-total {
+        text-align: left;
+        min-width: auto;
+        flex: 1 1 100%; /* force total to a line or float it */
+    }
+    .update-form {
+        flex-grow: 1;
+    }
+}

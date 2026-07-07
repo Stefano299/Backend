@@ -4,14 +4,15 @@
 {% block title %}PC Parts Builder - Progetta il tuo PC{% endblock %}
 
 {% block css %}
-    <link rel="stylesheet" href="{% static 'css/home.css' %}">
+    <link rel="stylesheet" href="{% static 'css/home.css' %}?t={% now 'U' %}">
 {% endblock %}
 
 {% block fullwidth_top %}
 <div class="hero-section">
     <div class="hero-content">
-        <h1 class="hero-title">ASSEMBLA LA TUA WORKSTATION</h1>
-        <p class="hero-subtitle">Progetta e costruisci il tuo PC ideale. Offriamo una selezione di hardware di livello ingegneristico per garantire le massime prestazioni per gaming, rendering e produttività.</p>
+        <img src="/media/homepage/logo.png" alt="PC Builder" class="hero-logo" style="max-height: 280px; width: auto; object-fit: contain;">
+        <h1 class="hero-title">COSTRUISCI IL TUO NUOVO PC</h1>
+        <p class="hero-subtitle">Hai voglia di un nuovo PC o di fare un upgrade? Questo è il posto giusto per te! Offriamo componenti hardware di alto livello per ogni fascia di prezzo.</p>
     </div>
 </div>
 {% endblock %}
@@ -25,7 +26,7 @@
             <div>
                 <h3 class="option-title">Assemblatore Guidato</h3>
                 <p class="option-text">
-                    Costruisci la tua workstation passo-passo. Il configuratore ti guida nella scelta di processore, scheda madre, RAM e tutti i componenti necessari, verificando in automatico la compatibilità dei socket ad ogni passaggio.
+                    Non sei un esperto? Nessun problema!Ti aiutiamo a costruire il tuo nuovo computer passo passo, guidandoti nella scelta dei componenti e gestendo la loro compatibilità.
                 </p>
             </div>
             <div class="option-action">
@@ -37,7 +38,7 @@
             <div>
                 <h3 class="option-title">Componenti Singoli</h3>
                 <p class="option-text">
-                    Hai già in mente l'upgrade specifico per il tuo sistema? Esplora il nostro catalogo completo. Puoi cercare, filtrare per categoria e aggiungere direttamente al carrello i singoli componenti in totale autonomia.
+                    Se vuoi dei singoli componenti per un upgrade o per il tuo nuovo PC, puoi consultare il nostro catalogo in totale autonomia, dalle schede madri ai case e alle RAM.
                 </p>
             </div>
             <div class="option-action">
@@ -49,12 +50,13 @@
 
 <div class="info-banner" style="margin-bottom: 5rem;">
     <div class="banner-image">
-        <img src="https://images.unsplash.com/photo-1587202372775-e229f172b9d7?q=80&w=500&auto=format&fit=crop" alt="PC Hardware Build">
+        <img src="/media/homepage/1.jpg" alt="PC Hardware Build">
     </div>
     <div class="banner-content">
         <h2 class="banner-title">PROGETTAZIONE PROFESSIONALE</h2>
-        <p class="banner-text">Selezioniamo solo componenti hardware stabili e ad alte prestazioni. Che si tratti di compilazione software massiva, rendering 3D intensivo o calcolo scientifico, i nostri componenti garantiscono l'affidabilità richiesta per il lavoro professionale.</p>
-        <p class="banner-text">Dalla dissipazione termica ottimizzata all'efficienza energetica della PSU, curiamo l'architettura dei componenti per darti una base solida e duratura.</p>
+        
+        <p class="banner-text">I nostri componenti sono selezionati da esperti del settore, sia per il gaming sia per il lavoro professionale in azienda; da computer di ufficio a potenti wrokstation con schede grafiche NVidia per i più potenti software di modellazione 3D. Ogni componente è acquisito da fornitori affidabili e certificati da noi stessi.</p>
+        <p class="banner-text">Tutti i componenti sono ottimizzati non solo per essere potenti, ma anche duratori: attraverso un'efficace gestione termica e dei consumi.</p>
     </div>
 </div>
 
@@ -90,11 +92,11 @@
 
 <div class="info-banner reverse" style="margin-top: 5rem; margin-bottom: 2rem;">
     <div class="banner-image">
-        <img src="https://images.unsplash.com/photo-1542751371-adc38448a05e?q=80&w=500&auto=format&fit=crop" alt="PC Gaming Community and Support">
+        <img src="/media/homepage/2.jpg" alt="PC Gaming Community and Support">
     </div>
     <div class="banner-content">
-        <h2 class="banner-title">SUPPORTO E COMMUNITY</h2>
-        <p class="banner-text">Non ti lasciamo solo dopo l'acquisto. La nostra community di appassionati e tecnici è a tua disposizione per consigli sul cablaggio, ottimizzazione del flusso d'aria o per risolvere qualsiasi dubbio di assemblaggio.</p>
+        <h2 class="banner-title">ESPERIENZA E PROFESSIONALITÀ</h2>
+        <p class="banner-text"> Al giorno d'oggi ci sono milioni di componenti hwardware in commercio di bassa qualità, venduti da fornitori che non si preoccupano della qualità dei prodotti, ma solo dei profitti. Noi siamo diversi: anche se i prezzi sono un po' più alti, questi coprono la nostra esperienza nel settore e la nostra professionalità nella scelta dei pezzi. Per questo i clienti sono sempre soddisfatti</p>.</p>
         <p class="banner-text">Ogni componente hardware acquistato sul nostro store è coperto da supporto tecnico diretto per l'installazione e una garanzia di compatibilità certificata dai nostri esperti.</p>
     </div>
 </div>

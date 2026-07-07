@@ -462,3 +462,65 @@ details.dashboard-section:not([open]) summary.section-header {
     border-radius: 2px;
     text-transform: uppercase;
 }
+
+@media (max-width: 768px) {
+    .dashboard-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+    }
+    summary.section-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+    }
+    .section-header h2::after {
+        display: none; /* Hide helper plus/minus indicator or adjust spacing */
+    }
+    .section-header-actions {
+        width: 100%;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.8rem;
+    }
+    .section-header-actions .form-input {
+        width: 100% !important;
+    }
+    .btn-dashboard.btn-add {
+        width: 100%;
+        text-align: center;
+        padding: 0.6rem;
+    }
+    .wallet-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    .wallet-balance {
+        width: 100%;
+        text-align: center;
+        box-sizing: border-box;
+    }
+    .wallet-transfer-form {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    .wallet-form-input {
+        width: 100%;
+    }
+}
+
+@media (max-width: 500px) {
+    .form-actions {
+        flex-direction: column;
+        gap: 1rem;
+    }
+    .form-actions .btn-dashboard,
+    .form-actions a {
+        width: 100%;
+        text-align: center;
+        box-sizing: border-box;
+    }
+    .form-card {
+        padding: 1.25rem;
+    }
+}

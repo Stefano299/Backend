@@ -105,3 +105,12 @@
 .auth-footer a {
     font-weight: 600;
 }
+
+@media (max-width: 450px) {
+    .auth-wrapper {
+        padding: 2rem 0;
+    }
+    .auth-card {
+        padding: 1.5rem;
+    }
+}

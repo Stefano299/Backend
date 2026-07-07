@@ -18,7 +18,6 @@
 </div>
 
 <div class="order-detail-container">
-    <!-- Left Column: Details & Products -->
     <div>
         <div class="order-info-card">
             <h3 class="card-title">Informazioni di Spedizione e Pagamento</h3>
@@ -51,52 +50,53 @@
 
         <div class="products-card">
             <h3 class="card-title">Articoli Acquistati</h3>
-            <table class="products-table">
-                <thead>
-                    <tr>
-                        <th>Prodotto</th>
-                        <th style="text-align: center;">Quantità</th>
-                        <th style="text-align: right;">Prezzo Unitario</th>
-                        <th style="text-align: right;">Totale</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for item in order.items.all %}
+            <div class="table-responsive">
+                <table class="products-table">
+                    <thead>
                         <tr>
-                            <td>
-                                <div class="product-cell">
-                                    <img src="{{ item.product.image.url }}?t={% now 'U' %}" alt="{{ item.product.name }}" class="product-img">
-                                    <div>
-                                        <a href="{% url 'shop:product_detail' item.product.id %}" class="product-link">
-                                            <span class="product-name">{{ item.product.name }}</span>
-                                        </a>
-                                        <div style="font-size: 0.85rem; color: #71717a; margin-top: 0.2rem;">
-                                            {{ item.product.description|truncatewords:8 }}
+                            <th>Prodotto</th>
+                            <th style="text-align: center;">Quantità</th>
+                            <th style="text-align: right;">Prezzo Unitario</th>
+                            <th style="text-align: right;">Totale</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in order.items.all %}
+                            <tr>
+                                <td>
+                                    <div class="product-cell">
+                                        <img src="{{ item.product.image.url }}?t={% now 'U' %}" alt="{{ item.product.name }}" class="product-img">
+                                        <div>
+                                            <a href="{% url 'shop:product_detail' item.product.id %}" class="product-link">
+                                                <span class="product-name">{{ item.product.name }}</span>
+                                            </a>
+                                            <div style="font-size: 0.85rem; color: #71717a; margin-top: 0.2rem;">
+                                                {{ item.product.description|truncatewords:8 }}
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
-                            </td>
-                            <td style="text-align: center; font-weight: 500;">
-                                {{ item.quantity }}
-                            </td>
-                            <td style="text-align: right; color: #cbd5e1;">
-                                €{{ item.price }}
-                            </td>
-                            <td style="text-align: right; font-weight: 600; color: #ffffff;">
-                                €{{ item.get_cost }}
-                            </td>
+                                </td>
+                                <td style="text-align: center; font-weight: 500;">
+                                    {{ item.quantity }}
+                                </td>
+                                <td style="text-align: right; color: #cbd5e1;">
+                                    €{{ item.price }}
+                                </td>
+                                <td style="text-align: right; font-weight: 600; color: #ffffff;">
+                                    €{{ item.get_cost }}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                        <tr class="total-row">
+                            <td colspan="3" style="text-align: right; border-bottom: none; padding-top: 1.5rem;">Totale Ordine:</td>
+                            <td class="total-price" style="text-align: right; border-bottom: none; padding-top: 1.5rem;">€{{ order.get_total_cost }}</td>
                         </tr>
-                    {% endfor %}
-                    <tr class="total-row">
-                        <td colspan="3" style="text-align: right; border-bottom: none; padding-top: 1.5rem;">Totale Ordine:</td>
-                        <td class="total-price" style="text-align: right; border-bottom: none; padding-top: 1.5rem;">€{{ order.get_total_cost }}</td>
-                    </tr>
-                </tbody>
-            </table>
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
 
-    <!-- Right Column: Shipment Status Vertical Timeline -->
     <div class="timeline-card">
         <h3 class="card-title">Stato della Spedizione</h3>
         

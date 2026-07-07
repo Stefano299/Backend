@@ -4,15 +4,21 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}PC Parts Builder{% endblock %}</title>
+    <title>{% block title %}PC Builder{% endblock %}</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="{% static 'css/base.css' %}">
+    <link rel="stylesheet" href="{% static 'css/base.css' %}?t={% now 'U' %}">
     {% block css %}{% endblock %}
 </head>
 <body>
     <nav class="navbar" data-js="navbar">
-        <a href="/" class="brand">PC Parts Builder</a>
-        <div class="nav-links">
+        <a href="/" class="brand">
+            <img src="/media/homepage/logo.png" alt="PC Builder Logo" class="brand-logo" style="height: 40px; width: auto; object-fit: contain;">
+            PC Builder
+        </a>
+        <button class="nav-toggle" data-js="nav-toggle" aria-label="Apri menu">
+            <span class="hamburger"></span>
+        </button>
+        <div class="nav-links" data-js="nav-links">
             <a href="/">Home</a>
             <a href="{% url 'shop:product_list' %}">Catalogo</a>
             <a href="{% url 'shop:cart_detail' %}">Carrello{% if cart|length > 0 %} <span class="cart-badge">({{ cart|length }})</span>{% endif %}</a>
@@ -42,9 +48,9 @@
     </main>
 
     <footer class="footer">
-        <p>&copy; 2026 PC Parts Builder.</p>
+        <p>&copy; 2026 PC Builder.</p>
     </footer>
 
-    <script src="{% static 'js/navbar.js' %}"></script>
+    <script src="{% static 'js/navbar.js' %}?t={% now 'U' %}"></script>
 </body>
 </html>

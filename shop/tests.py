@@ -638,6 +638,6 @@ class ProductImageTests(TestCase):
             price=100.00,
             stock=15
         )
-        self.assertEqual(product.image.url, "/media/products/default.jpg")
+        self.assertEqual(product.image.url, "/media/products/default.png")
 
 
