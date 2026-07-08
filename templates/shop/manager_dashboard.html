@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}Dashboard Manager - PC Parts Builder{% endblock %}
+{% block title %}Dashboard Manager - PC Builder{% endblock %}
 
 {% block css %}
     <link rel="stylesheet" href="{% static 'css/dashboard.css' %}?v=1.2">
@@ -16,7 +16,8 @@
         </div>
     </div>
 
-    <!-- SEZIONE METRICHE (KPIs) -->
+
+    <!--Sezione che mostra dati vendite, clienti ecc-->
     <div class="dashboard-stats-grid">
         <div class="stat-card">
             <div class="stat-icon">
@@ -47,12 +48,12 @@
         </div>
     </div>
 
-    <!-- SEZIONE VENDITE EFFETTUATE (History delle vendite) -->
+    <!-- History delle vendite -->
     <details class="dashboard-section">
         <summary class="section-header">
             <h2>History delle Vendite</h2>
             <div class="section-header-actions">
-                <input type="text" placeholder="Cerca vendite..." data-search-table="sales-table" class="form-input">
+                <input type="text" placeholder="Cerca vendite..." data-js="search-table" data-search-table="sales-table" class="form-input">
             </div>
         </summary>
         
@@ -95,8 +96,8 @@
         <summary class="section-header">
             <h2>Gestione Prodotti</h2>
             <div class="section-header-actions">
-                <input type="text" placeholder="Cerca prodotto..." data-search-table="products-table" class="form-input">
-                <a href="{% url 'shop:product_create' %}" class="btn-dashboard btn-add">+ Aggiungi Prodotto</a>
+                <input type="text" placeholder="Cerca prodotto..." data-js="search-table" data-search-table="products-table" class="form-input">
+                <a href="{% url 'shop:product_create' %}" data-js="add-button" class="btn-dashboard btn-add">+ Aggiungi Prodotto</a>
             </div>
         </summary>
         
@@ -162,8 +163,8 @@
         <summary class="section-header">
             <h2>Gestione Categorie</h2>
             <div class="section-header-actions">
-                <input type="text" placeholder="Cerca categoria..." data-search-table="categories-table" class="form-input">
-                <a href="{% url 'shop:category_create' %}" class="btn-dashboard btn-add">+ Aggiungi Categoria</a>
+                <input type="text" placeholder="Cerca categoria..." data-js="search-table" data-search-table="categories-table" class="form-input">
+                <a href="{% url 'shop:category_create' %}" data-js="add-button" class="btn-dashboard btn-add">+ Aggiungi Categoria</a>
             </div>
         </summary>
         
@@ -206,7 +207,7 @@
         <summary class="section-header">
             <h2>Gestione Ordini</h2>
             <div class="section-header-actions">
-                <input type="text" placeholder="Cerca ordini..." data-search-table="orders-table" class="form-input">
+                <input type="text" placeholder="Cerca ordini..." data-js="search-table" data-search-table="orders-table" class="form-input">
             </div>
         </summary>
         
@@ -258,7 +259,7 @@
         <summary class="section-header">
             <h2>Gestione Recensioni</h2>
             <div class="section-header-actions">
-                <input type="text" placeholder="Cerca recensione..." data-search-table="reviews-table" class="form-input">
+                <input type="text" placeholder="Cerca recensione..." data-js="search-table" data-search-table="reviews-table" class="form-input">
             </div>
         </summary>
         
@@ -280,7 +281,7 @@
                             <td>{{ review.product.name }}</td>
                             <td><strong>{{ review.user.username }}</strong></td>
                             <td>
-                                <span style="color: #f59e0b; font-weight: bold;">
+                                <span class="review-rating">
                                     {{ review.rating }} / 5
                                 </span>
                             </td>

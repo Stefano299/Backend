@@ -10,7 +10,7 @@
 {% endblock %}
 
 {% block content %}
-<div class="form-card" style="max-width: 600px;">
+<div class="form-card entity-form">
     <h2>
         {% if entity_type == 'order' %}
             Aggiorna Ordine #{{ object.id }}
@@ -20,7 +20,7 @@
     </h2>
     
     {% if entity_type == 'order' %}
-    <p style="color: #a1a1aa; font-size: 0.9rem; margin-bottom: 1.5rem;">
+    <p class="form-card-info">
         Cliente: <strong>{{ object.user.username }}</strong><br>
         Effettuato il: {{ object.created|date:"d M Y H:i" }}<br>
         Totale: <strong>€{{ object.get_total_cost }}</strong>
@@ -33,8 +33,8 @@
         {{ form.as_p }}
         
         <div class="form-actions">
-            <button type="submit" class="btn-dashboard btn-add" style="padding: 0.6rem 1.2rem;">Salva</button>
-            <a href="{% url 'shop:manager_dashboard' %}" class="btn-dashboard btn-cancel" style="padding: 0.6rem 1.2rem;">Annulla</a>
+            <button type="submit" class="btn-dashboard btn-add">Salva</button>
+            <a href="{% url 'shop:manager_dashboard' %}" class="btn-dashboard btn-cancel">Annulla</a>
         </div>
     </form>
 </div>

@@ -572,7 +572,11 @@ class CheckoutTests(TestCase):
         self.assertEqual(self.customer.numero_di_telefono, '0987654321')
 
         # Verify order was created
-        self.assertTrue(Order.objects.filter(user=self.customer, payment_method='paypal').exists())
+        order = Order.objects.filter(user=self.customer, payment_method='paypal').first()
+        self.assertIsNotNone(order)
+        self.assertEqual(order.first_name, 'NewFirst')
+        self.assertEqual(order.last_name, 'NewLast')
+        self.assertEqual(order.email, 'new@example.com')
 
         # Verify product stock was decremented
         self.product.refresh_from_db()

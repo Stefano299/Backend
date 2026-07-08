@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}Accedi - PC Parts Builder{% endblock %}
+{% block title %}Accedi - PC Builder{% endblock %}
 
 {% block css %}
     <link rel="stylesheet" href="{% static 'css/auth.css' %}">
@@ -11,7 +11,7 @@
 <div class="auth-wrapper">
     <div class="auth-card">
         <h1 class="auth-title">Accedi</h1>
-        <p class="auth-subtitle">Bentornato! Inserisci i tuoi dati.</p>
+        <p class="auth-subtitle">Benvenuto! Inserisci i tuoi dati.</p>
         
         {% if form.errors %}
             <div class="alert-error">

@@ -143,7 +143,6 @@ img {
     height: auto;
 }
 
-/* Nav toggle button styling */
 .nav-toggle {
     display: none;
     background: none;
@@ -182,7 +181,9 @@ img {
     left: 0;
 }
 
-/* Active hamburger states */
+/* Questi state rendono l'animazione dell'hamburger molto bella (diventa una X)
+   non ci sarei mai riuscito senza IA ma la tengo perchè rende, insieme agli altri dettagli,
+   il frontend davvero più bello */
 .nav-toggle.active .hamburger {
     background-color: transparent;
 }
@@ -197,12 +198,10 @@ img {
     top: 0;
 }
 
-/* Body lock when nav is open */
 body.nav-open {
     overflow: hidden;
 }
 
-/* Mobile responsive styles */
 @media (max-width: 992px) {
     .nav-toggle {
         display: block;
@@ -267,7 +266,7 @@ body.nav-open {
     }
 }
 
-/* Flash Messages & Alerts */
+/* Notifiche */
 .messages-container {
     margin-bottom: 2rem;
     display: flex;

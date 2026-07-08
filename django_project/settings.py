@@ -92,7 +92,7 @@ DATABASES = {
     }
 }
 
-
+# Tengo dei controlli semplici anche perè voglio poter utilizzare password semplici per gli account demo
 AUTH_PASSWORD_VALIDATORS = [
     {
         'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',

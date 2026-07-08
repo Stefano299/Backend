@@ -1,7 +1,21 @@
-/* Style for Order List and Order Detail pages */
+
+.page-header {
+    margin-bottom: 2rem;
+}
 
 .page-header h1 {
     color: #f59e0b;
+    margin: 0;
+    font-size: 2rem;
+}
+
+.page-header p {
+    color: #71717a;
+    margin: 0.5rem 0 0 0;
+}
+
+.timeline-container {
+    position: relative;
 }
 
 .orders-container {
@@ -30,6 +44,7 @@
     font-size: 1.2rem;
     font-weight: 700;
     color: #f59e0b;
+    text-decoration: underline;
 }
 
 .order-date {
@@ -47,6 +62,11 @@
     display: flex;
     flex-direction: column;
     gap: 0.5rem;
+}
+
+.order-items-list h4 {
+    margin: 0 0 0.8rem 0;
+    color: #71717a;
 }
 
 .order-item-row {
@@ -72,6 +92,26 @@
 
 .order-details-col strong {
     color: #e4e4e7;
+}
+
+.order-summary-box {
+    margin-top: auto;
+    font-size: 1.1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.8rem;
+}
+
+.order-summary-box strong {
+    color: #f59e0b;
+}
+
+.order-summary-box .btn-primary {
+    text-align: center;
+    display: block;
+    font-size: 0.9rem;
+    padding: 0.4rem 0.6rem;
+    border-radius: 2px;
 }
 
 /* Status badge */
@@ -158,7 +198,6 @@
     color: #e4e4e7;
 }
 
-/* Products Table */
 .products-table {
     width: 100%;
     border-collapse: collapse;
@@ -169,6 +208,31 @@
     padding: 1rem;
     text-align: left;
     border-bottom: 1px solid #27272a;
+}
+
+.products-table th:nth-child(2),
+.products-table td:nth-child(2) {
+    text-align: center;
+}
+
+.products-table th:nth-child(3),
+.products-table td:nth-child(3),
+.products-table th:nth-child(4),
+.products-table td:nth-child(4) {
+    text-align: right;
+}
+
+.products-table td:nth-child(2) {
+    font-weight: 500;
+}
+
+.products-table td:nth-child(3) {
+    color: #cbd5e1;
+}
+
+.products-table td:nth-child(4) {
+    font-weight: 600;
+    color: #ffffff;
 }
 
 .products-table th {
@@ -182,6 +246,12 @@
     display: flex;
     align-items: center;
     gap: 1rem;
+}
+
+.product-desc {
+    font-size: 0.85rem;
+    color: #71717a;
+    margin-top: 0.2rem;
 }
 
 .product-img {
@@ -211,11 +281,17 @@
     font-weight: 700;
 }
 
+.products-table tr.total-row td {
+    text-align: right;
+    border-bottom: none;
+    padding-top: 1.5rem;
+}
+
 .total-price {
     color: #f59e0b;
 }
 
-/* Timeline Panel */
+/* Pannello per la timeline */
 .timeline-card {
     background: #1a1a1a;
     border: 1px solid #27272a;

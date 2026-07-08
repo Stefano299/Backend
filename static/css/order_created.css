@@ -39,6 +39,15 @@
 .detail-row strong {
     color: #e4e4e7;
 }
+.detail-row.total-row {
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid #27272a;
+}
+.detail-row.total-row strong {
+    color: #f59e0b;
+    font-size: 1.2rem;
+}
 .success-actions {
     display: flex;
     gap: 1rem;

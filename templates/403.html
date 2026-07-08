@@ -4,7 +4,7 @@
 {% block title %}Accesso Negato{% endblock %}
 
 {% block css %}
-    <link rel="stylesheet" href="{% static 'css/403.css' %}?t={% now 'U' %}">
+<link rel="stylesheet" href="{% static 'css/403.css' %}?t={% now 'U' %}">
 {% endblock %}
 
 {% block content %}
@@ -14,9 +14,9 @@
         <h1 class="error-title">Accesso Negato</h1>
         <p class="error-message">
             {% if exception %}
-                {{ exception }}
+            {{ exception }}
             {% else %}
-                Non hai i permessi necessari per visualizzare questa pagina o eseguire questa azione.
+            Non hai i permessi necessari per visualizzare questa pagina o eseguire questa azione.
             {% endif %}
         </p>
         <a href="{% url 'home' %}" class="error-btn">Torna alla Home</a>

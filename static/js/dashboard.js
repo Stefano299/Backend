@@ -1,17 +1,23 @@
+// Attende il caricamento completo del DOM
 document.addEventListener('DOMContentLoaded', function() {
-    // Simple table searching / filtering
-    const searchInputs = document.querySelectorAll('[data-search-table]');
-    searchInputs.forEach(input => {
+    
+    // Gestione della ricerca e del filtraggio nelle tabelle della dashboard
+    const searchInputs = document.querySelectorAll('[data-js="search-table"]');
+    
+    searchInputs.forEach(function(input) {
         const tableId = input.getAttribute('data-search-table');
         const table = document.getElementById(tableId);
+        
         if (!table) return;
 
+        // Filtra le righe della tabella ogni volta che l'utente rilascia un tasto
         input.addEventListener('keyup', function() {
             const filter = this.value.toLowerCase();
             const rows = table.querySelectorAll('tbody tr');
             
-            rows.forEach(row => {
+            rows.forEach(function(row) {
                 const text = row.textContent.toLowerCase();
+                // Mostra la riga se contiene il testo cercato, altrimenti la nasconde
                 if (text.includes(filter)) {
                     row.style.display = '';
                 } else {
@@ -21,11 +27,12 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
-    // Prevent details from toggling when clicking inputs or links inside summary
-    const summaryInteractives = document.querySelectorAll('summary input, summary a');
-    summaryInteractives.forEach(element => {
+    // Impedisce che cliccando su link o input all'interno di un tag <summary>
+    // venga attivata/disattivata la visualizzazione dei dettagli del tag <details>
+    const summaryInteractives = document.querySelectorAll('summary [data-js="search-table"], summary [data-js="add-button"]');
+    summaryInteractives.forEach(function(element) {
         element.addEventListener('click', function(e) {
-            e.stopPropagation();
+            e.stopPropagation(); 
         });
     });
 });

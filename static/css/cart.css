@@ -268,7 +268,7 @@
     .item-total {
         text-align: left;
         min-width: auto;
-        flex: 1 1 100%; /* force total to a line or float it */
+        flex: 1 1 100%;
     }
     .update-form {
         flex-grow: 1;

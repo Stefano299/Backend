@@ -51,6 +51,7 @@ class Product(models.Model):
             return round(total_rating / reviews.count(), 1)
         return None
 
+    # Servono nel template per disegnare le stellette
     def get_stars_filled(self):
         avg = self.get_average_rating()
         if avg is not None:
@@ -74,13 +75,26 @@ class Order(models.Model):
     ]
 
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='orders')
+    first_name = models.CharField(max_length=150, blank=True, null=True)
+    last_name = models.CharField(max_length=150, blank=True, null=True)
+    email = models.EmailField(blank=True, null=True)
     indirizzo = models.CharField(max_length=255)
     citta = models.CharField(max_length=100)
     codice_postale = models.CharField(max_length=20)
     numero_di_telefono = models.CharField(max_length=20)
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
-    payment_method = models.CharField(max_length=50, default='card')
+    PAYMENT_METHOD_CHOICES = [
+        ('card', 'Carta di Credito'),
+        ('paypal', 'PayPal'),
+        ('transfer', 'Bonifico Bancario'),
+    ]
+    payment_method = models.CharField(
+        max_length=50,
+        choices=PAYMENT_METHOD_CHOICES,
+        default='card',
+        verbose_name="Metodo di Pagamento"
+    )
     shipping_status = models.CharField(
         max_length=20,
         choices=SHIPPING_STATUS_CHOICES,
@@ -98,6 +112,7 @@ class Order(models.Model):
     def get_total_cost(self):
         return sum(item.get_cost() for item in self.items.all())
 
+    # Serve alla barra di avanzamento della spedizione mostrata nel frontend
     def return_order_number(self):
         mapping = {
             'ricevuto': 1,

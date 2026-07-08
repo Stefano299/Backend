@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}PC Parts Builder - Progetta il tuo PC{% endblock %}
+{% block title %}PC Builder - Progetta il tuo PC{% endblock %}
 
 {% block css %}
     <link rel="stylesheet" href="{% static 'css/home.css' %}?t={% now 'U' %}">
@@ -10,7 +10,7 @@
 {% block fullwidth_top %}
 <div class="hero-section">
     <div class="hero-content">
-        <img src="/media/homepage/logo.png" alt="PC Builder" class="hero-logo" style="max-height: 280px; width: auto; object-fit: contain;">
+        <img src="/media/homepage/logo.png" alt="PC Builder" class="hero-logo">
         <h1 class="hero-title">COSTRUISCI IL TUO NUOVO PC</h1>
         <p class="hero-subtitle">Hai voglia di un nuovo PC o di fare un upgrade? Questo è il posto giusto per te! Offriamo componenti hardware di alto livello per ogni fascia di prezzo.</p>
     </div>
@@ -48,7 +48,7 @@
     </div>
 </div>
 
-<div class="info-banner" style="margin-bottom: 5rem;">
+<div class="info-banner">
     <div class="banner-image">
         <img src="/media/homepage/1.jpg" alt="PC Hardware Build">
     </div>
@@ -97,7 +97,7 @@
     {% endif %}
 </div>
 
-<div class="info-banner reverse" style="margin-top: 5rem; margin-bottom: 2rem;">
+<div class="info-banner reverse">
     <div class="banner-image">
         <img src="/media/homepage/2.jpg" alt="PC Gaming Community and Support">
     </div>

@@ -14,14 +14,13 @@ from .forms import CartAddProductForm, OrderCreateForm, ProductForm, CategoryFor
 
 
 # ==========================================
-# 1. CATALOG & PRODUCTS
+# CATALOG & PRODUCTS
 # ==========================================
-
 class ProductListView(ListView):
     model = Product
     template_name = "shop/catalog.html"
     context_object_name = "products"
-    paginate_by = 12
+    paginate_by = 12  # Così non vengono mostrati tutti i prodotti nella stessa pagina
 
     def get_queryset(self):
         from django.db.models.functions import Coalesce
@@ -70,6 +69,8 @@ class ProductListView(ListView):
         
         # Calcola prezzo massimo prodotti nel database
         from django.db.models.functions import Coalesce
+        # Coalescence, prendendo il primo valore non nullo, prende disocunt price se presente, sennò quello normale
+        # Poi creo il campo virtuale active_price con annotate
         most_expensive_product = Product.objects.annotate(
             active_price=Coalesce('discount_price', 'price')
         ).order_by('-active_price').first()
@@ -83,9 +84,10 @@ class ProductListView(ListView):
         context['max_price'] = self.request.GET.get('max_price')
         context['sort_by'] = self.request.GET.get('sort', 'newest')
         
-        # Costruisci la query string per mantenere i filtri nella paginazione
+        # Costruisco la query string per mantenere i filtri nella paginazione
         query_params = self.request.GET.copy()
         if 'page' in query_params:
+            # Sennò si accumulano i numeri delle pagine
             del query_params['page']
         context['query_string'] = query_params.urlencode()
         
@@ -145,7 +147,7 @@ def add_review(request, product_id):
 
 
 # ==========================================
-# 2. CART
+# CART
 # ==========================================
 
 @require_POST
@@ -182,7 +184,7 @@ def cart_detail(request):
 
 
 # ==========================================
-# 3. CHECKOUT & ORDERS
+# CHECKOUT & ORDERS
 # ==========================================
 
 @login_required
@@ -291,7 +293,7 @@ class OrderDetailView(LoginRequiredMixin, DetailView):
 
 
 # ==========================================
-# 4. PC BUILDER (Assemblatore PC)
+# PC BUILDER (Quello per creare il PC in modo guidato)
 # ==========================================
 
 def pc_builder_step(request, step=1):
@@ -317,22 +319,23 @@ def pc_builder_step(request, step=1):
     # Carica tutti i prodotti nel db per la categoria
     products = Product.objects.filter(categories=category, stock__gt=0)
     
-    # Compatibilità semplice basata su marca/socket (livello studente)
+    # Codice per simulare compabilità....
     selected_cpu_id = request.session.get('pc_build_step_1')
     selected_mobo_id = request.session.get('pc_build_step_3')
     selected_gpu_id = request.session.get('pc_build_step_5')
     
     compatibility_applied = False
-    compatibility_details = "" # I dettagli saranno visualizzati dall'utente nella pagina
+    compatibility_details = "" # I dettagli sulla compabilità saranno visualizzati dall'utente nella pagina, in alto a sinistra
     cpu_name = None
     
-    # Prepara nome CPU se già selezionata
+    # Prende nome CPU se già selezionata
     if selected_cpu_id:
         cpu = Product.objects.filter(id=selected_cpu_id).first()
         if cpu:
             cpu_name = cpu.name
 
-    # Step 2: Dissipatore
+    # Nel secondo step, per il dissipatore toglie alcuni prodotti in base alla loro descrizione.
+    # Prima controllo il tipo di CPU (AMD?), se sì tolgo quei dissipatori che simulo incompatibili
     if step == 2 and selected_cpu_id:
         cpu = Product.objects.filter(id=selected_cpu_id).first()
         if cpu:
@@ -345,7 +348,7 @@ def pc_builder_step(request, step=1):
                 products = products.exclude(description__icontains="AM5").exclude(description__icontains="AM4")
                 compatibility_details = "Dissipatori compatibili con Intel"
 
-    # Step 3: Scheda Madre
+    # Stessa cosa con scheda madre
     elif step == 3 and selected_cpu_id:
         cpu = Product.objects.filter(id=selected_cpu_id).first()
         if cpu:
@@ -358,12 +361,11 @@ def pc_builder_step(request, step=1):
                 products = products.exclude(description__icontains="AM5").exclude(description__icontains="AM4")
                 compatibility_details = "Schede madri con socket Intel"
            
-    # Step 4: Memoria RAM
+    # Per a memoria RAM controllo se la scheda madre supporta DDR4 o DDR5
     elif step == 4 and selected_mobo_id:
         mobo = Product.objects.filter(id=selected_mobo_id).first()
         if mobo:
             compatibility_applied = True
-            # Controlla se la scheda madre usa DDR5 o DDR4
             if "DDR5" in mobo.name or "DDR5" in mobo.description:
                 products = products.filter(description__icontains="DDR5")
                 compatibility_details = "Memoria RAM DDR5 richiesta dalla scheda madre"
@@ -371,12 +373,12 @@ def pc_builder_step(request, step=1):
                 products = products.filter(description__icontains="DDR4")
                 compatibility_details = "Memoria RAM DDR4 richiesta dalla scheda madre"
 
-    # Step 7: Alimentatore
+    # Per l'alimentatore controllo se la scheda video è molto potente (nvidia serie 40)
     elif step == 7 and selected_gpu_id:
         gpu = Product.objects.filter(id=selected_gpu_id).first()
         if gpu:
             compatibility_applied = True
-            # Se la scheda video contiene "40" tipo la rtx 4090, che sono potenti
+            # Controllo solo se contine 40 nel nome... (ovviamente potrebbe fallire, ma lo tengo semplice)
             if "40" in gpu.name:
                 # Escludo gli alimentatori da 750W o inferiori per tenere solo quelli superiori
                 products = products.exclude(description__icontains="450W")\
@@ -400,7 +402,7 @@ def pc_builder_step(request, step=1):
             else:
                 return redirect('shop:pc_builder_summary')
                 
-    # Lista dei passaggi con i prodotti per il template
+    # Lista dei passaggi con i prodotti per il template (viene mostrato un summary in basso a desta)
     steps_data = []
     total_price = 0
     for i, cat_name in enumerate(categories_order, start=1):
@@ -493,7 +495,7 @@ def pc_builder_clear(request):
 
 
 # ==========================================
-# 5. MANAGER DASHBOARD & MIXINS
+# MANAGER DASHBOARD & MIXINS
 # ==========================================
 
 class ManagerDashboardView(LoginRequiredMixin, PermissionRequiredMixin, TemplateView):
@@ -527,15 +529,16 @@ class ManagerDashboardView(LoginRequiredMixin, PermissionRequiredMixin, Template
         context['total_sales_count'] = orders.count()
         context['total_earnings'] = sum(item.price * item.quantity for item in sales)
         
+        # Serve soltanto per mostrare il numero di clienti nella dashboard...
         from django.contrib.auth import get_user_model
         User = get_user_model()
         context['total_customers'] = User.objects.filter(is_staff=False).exclude(groups__name='Store Manager').count()
         
         return context
 
+# Creo due mixin per evitare di ripetere sempre le stesse righe, sfruttando le CBV
 class ManagerFormMixin(LoginRequiredMixin, PermissionRequiredMixin):
-    """Mixin comune per le viste Create/Update del Manager.
-    Gestisce: login, permessi, template, redirect e titolo entità."""
+    #Mixin comune per le viste Create/Update del Manager.
     template_name = 'shop/entity_form.html'
     success_url = reverse_lazy('shop:manager_dashboard')
     entity_title = ''
@@ -546,14 +549,13 @@ class ManagerFormMixin(LoginRequiredMixin, PermissionRequiredMixin):
         return context
 
 class ManagerDeleteMixin(LoginRequiredMixin, PermissionRequiredMixin):
-    """Mixin comune per le viste Delete del Manager.
-    Gestisce: login, permessi, redirect e accetta solo POST."""
+    #Mixin comune per le viste Delete del Manager.
     success_url = reverse_lazy('shop:manager_dashboard')
     http_method_names = ['post']
 
 
 # ==========================================
-# 6. MANAGER CRUD (Prodotti, Categorie, Ordini)
+# MANAGER CRUD 
 # ==========================================
 
 # --- Prodotti ---

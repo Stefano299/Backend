@@ -5,6 +5,11 @@
     padding: 4rem 0;
 }
 
+.auth-wrapper.profile-wrapper {
+    max-width: 500px;
+    margin: 0 auto;
+}
+
 .auth-card {
     background: #1a1a1a;
     border: 1px solid #27272a;
@@ -12,6 +17,10 @@
     max-width: 400px;
     padding: 2.5rem;
     border-radius: 2px;
+}
+
+.auth-card.profile-card {
+    max-width: 100%;
 }
 
 .auth-title {

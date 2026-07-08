@@ -3,15 +3,16 @@ document.addEventListener('DOMContentLoaded', function() {
     const navToggle = document.querySelector('[data-js="nav-toggle"]');
     const navLinks = document.querySelector('[data-js="nav-links"]');
     
+    // Gestione dell'apertura/chiusura del menu mobile
     if (navToggle && navLinks) {
         navToggle.addEventListener('click', function(e) {
-            e.stopPropagation();
+            e.stopPropagation(); 
             navToggle.classList.toggle('active');
             navLinks.classList.toggle('active');
             document.body.classList.toggle('nav-open');
         });
         
-        // Close menu when clicking outside
+        // Chiude il menu mobile se si clicca all'esterno del menu
         document.addEventListener('click', function(e) {
             if (navLinks.classList.contains('active') && !navLinks.contains(e.target) && !navToggle.contains(e.target)) {
                 navToggle.classList.remove('active');
@@ -20,9 +21,9 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
         
-        // Close menu when clicking on a link or button
+        // Chiude il menu mobile quando si clicca su uno dei suoi link o pulsanti
         const links = navLinks.querySelectorAll('a, button, form');
-        links.forEach(link => {
+        links.forEach(function(link) {
             link.addEventListener('click', function() {
                 navToggle.classList.remove('active');
                 navLinks.classList.remove('active');
@@ -31,12 +32,13 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
+    // Gestione della scomparsa/comparsa della navbar durante lo scorrimento 
     if (navbar) {
         let lastScrollTop = 0;
         const scrollThreshold = 80;
         
         window.addEventListener('scroll', function() {
-            // If mobile menu is active, don't hide the navbar
+            // Se il menu mobile è aperto, non nasconde la navbar
             if (navLinks && navLinks.classList.contains('active')) {
                 return;
             }
@@ -44,14 +46,12 @@ document.addEventListener('DOMContentLoaded', function() {
             let scrollTop = window.pageYOffset || document.documentElement.scrollTop;
             
             if (scrollTop > lastScrollTop && scrollTop > scrollThreshold) {
-                // Scorrendo verso il basso: nasconde la navbar
                 navbar.classList.add('navbar-hidden');
             } else {
-                // Scorrendo verso l'alto: mostra la navbar
                 navbar.classList.remove('navbar-hidden');
             }
             
             lastScrollTop = scrollTop <= 0 ? 0 : scrollTop;
-        }, { passive: true });
+        });
     }
 });

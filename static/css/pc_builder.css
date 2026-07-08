@@ -1,4 +1,3 @@
-/* PC Builder styles */
 
 .builder-container {
     display: flex;
@@ -7,7 +6,6 @@
     margin-top: 1rem;
 }
 
-/* Progress Tracker */
 .progress-tracker {
     display: flex;
     justify-content: space-between;
@@ -143,7 +141,7 @@
     outline: none;
 }
 
-/* Compatibility Badge */
+/* Badge compatibilità */
 .compatibility-badge {
     background-color: rgba(245, 158, 11, 0.1);
     border: 1px solid rgba(245, 158, 11, 0.3);
@@ -157,7 +155,14 @@
     margin-bottom: 1rem;
 }
 
-/* Product Cards in Builder */
+.compatibility-badge.error {
+    background-color: rgba(239, 68, 68, 0.1);
+    border-color: rgba(239, 68, 68, 0.3);
+    color: #ef4444;
+    margin-top: 1.5rem;
+}
+
+/* prodotti nel builder */
 .builder-products-list {
     display: flex;
     flex-direction: column;
@@ -317,9 +322,19 @@
     padding-left: 0.4rem;
 }
 
+.sidebar-slot .summary-item-info {
+    width: 100%;
+}
+
 .slot-label {
     color: #a1a1aa;
     font-weight: bold;
+    display: block;
+}
+
+.slot-price {
+    font-size: 0.75rem;
+    color: #fbbf24;
 }
 
 .slot-val {
@@ -475,10 +490,24 @@
     margin-top: 2.5rem;
 }
 
+.summary-actions form {
+    flex: 1;
+    display: flex;
+}
+
+.summary-actions form .btn {
+    width: 100%;
+}
+
 .summary-actions .btn {
     flex: 1;
     padding: 0.8rem;
     font-size: 1.05rem;
+}
+
+.summary-clear-container {
+    text-align: center;
+    margin-top: 1.5rem;
 }
 
 .empty-state {
@@ -488,7 +517,11 @@
     color: #a1a1aa;
 }
 
-/* Responsive adjustments */
+.empty-state .btn-primary {
+    display: inline-block;
+    margin-top: 1rem;
+}
+
 @media (max-width: 900px) {
     .builder-layout {
         grid-template-columns: 1fr;
@@ -498,7 +531,6 @@
     }
 }
 
-/* Custom scrollbar for progress-tracker */
 .progress-tracker::-webkit-scrollbar {
     height: 4px;
 }

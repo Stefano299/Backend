@@ -1,4 +1,3 @@
-/* Custom styles for the Manager Dashboard */
 
 .dashboard-container {
     display: flex;
@@ -212,12 +211,26 @@ details.dashboard-section:not([open]) summary.section-header {
     padding-bottom: 0.5rem;
 }
 
+.form-card.entity-form {
+    max-width: 600px;
+}
+
+.form-card-info {
+    color: #a1a1aa;
+    font-size: 0.9rem;
+    margin-bottom: 1.5rem;
+}
+
 .form-actions {
     display: flex;
     gap: 1rem;
     margin-top: 2rem;
     border-top: 1px solid #27272a;
     padding-top: 1.5rem;
+}
+
+.form-actions .btn-dashboard {
+    padding: 0.6rem 1.2rem;
 }
 
 /* Form Widget customizations */
@@ -378,6 +391,11 @@ details.dashboard-section:not([open]) summary.section-header {
 
 /* Tabella Vendite */
 .sale-revenue {
+    color: #f59e0b;
+    font-weight: bold;
+}
+
+.review-rating {
     color: #f59e0b;
     font-weight: bold;
 }

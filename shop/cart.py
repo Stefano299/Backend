@@ -1,6 +1,8 @@
 from decimal import Decimal
 from .models import Product
 
+# Il carrello è un dizionario indicizzato sull'id dei prodotti che contiene la quantità e il prezzo
+# I prodotti vengono presi dal db quando si itera dal carrello
 class Cart:
     # Se non esiste, crea il dizionario cart
     def __init__(self, request):
@@ -21,7 +23,8 @@ class Cart:
             self.cart[product_id]['quantity'] += quantity
         self.save()
 
-    # Salva il carrello nella sessione dopo modifica
+    # Salva il carrello nella sessione dopo modifica, necessario perchè django rileva quando riassegno una chiave di cart
+    # ma non quando modifico il diizionario dentro il dizionario cart
     def save(self):
         self.session.modified = True
 
@@ -43,7 +46,7 @@ class Cart:
     def get_total_items(self):
         return sum(item['quantity'] for item in self)
 
-    # Permette di iterare sul carrello, ritornando anche i prodotti nel database
+    # Permette di iterare sul carrello, ritornando i prodotti nel database
     def __iter__(self):
         product_ids = self.cart.keys()
         # Query per recuperare tutti i prodotti con quegli id
@@ -56,7 +59,7 @@ class Cart:
         elementi_carrello = []
         for item in self.cart.values():
             # if che esclude quelli eliminati dal database
-            if 'product' in item:
+            if 'product' in item: # Esclude i prodotti tolti dal db
                 item['price'] = Decimal(item['price'])
                 item['total_price'] = item['price'] * item['quantity']
                 elementi_carrello.append(item)

@@ -52,21 +52,6 @@ class ProfileTests(TestCase):
         self.assertEqual(self.user.codice_postale, '20100')
         self.assertEqual(self.user.numero_di_telefono, '1234567890')
 
-    def test_profile_update_validation(self):
-        self.client.login(username='testuser', password='Password123!')
-        # email vuota deve fallire validazione
-        post_data = {
-            'first_name': 'Luigi',
-            'last_name': 'Verdi',
-            'email': '',
-            'indirizzo': 'Via Roma 10',
-            'citta': 'Milano',
-            'codice_postale': '20100',
-            'numero_di_telefono': '1234567890'
-        }
-        response = self.client.post(reverse('profile'), data=post_data)
-        self.assertEqual(response.status_code, 200) # Form viene re-renderizzato
-        self.assertFormError(response, 'form', 'email', 'This field is required.')
 
 
 class SignupTests(TestCase):

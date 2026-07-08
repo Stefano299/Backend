@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}Dettagli Ordine #{{ order.id }} - PC Parts Builder{% endblock %}
+{% block title %}Dettagli Ordine #{{ order.id }} - PC Builder{% endblock %}
 
 {% block css %}
 <link rel="stylesheet" href="{% static 'css/orders.css' %}">
@@ -12,9 +12,9 @@
     &larr; Torna ai miei ordini
 </a>
 
-<div class="page-header" style="margin-bottom: 2rem;">
-    <h1 style="margin: 0; font-size: 2rem;">Dettagli dell'Ordine #{{ order.id }}</h1>
-    <p style="color: #71717a; margin: 0.5rem 0 0 0;">Effettuato il {{ order.created|date:"d F Y \a\l\l\e H:i" }}</p>
+<div class="page-header">
+    <h1>Dettagli dell'Ordine #{{ order.id }}</h1>
+    <p>Effettuato il {{ order.created|date:"d F Y \a\l\l\e H:i" }}</p>
 </div>
 
 <div class="order-detail-container">
@@ -22,6 +22,11 @@
         <div class="order-info-card">
             <h3 class="card-title">Informazioni di Spedizione e Pagamento</h3>
             <div class="info-grid">
+                <div class="info-item">
+                    <span class="info-label">Destinatario</span>
+                    <span class="info-value">{{ order.first_name }} {{ order.last_name }}</span>
+                    <span class="info-value">{{ order.email }}</span>
+                </div>
                 <div class="info-item">
                     <span class="info-label">Indirizzo di Spedizione</span>
                     <span class="info-value">{{ order.indirizzo }}</span>
@@ -55,9 +60,9 @@
                     <thead>
                         <tr>
                             <th>Prodotto</th>
-                            <th style="text-align: center;">Quantità</th>
-                            <th style="text-align: right;">Prezzo Unitario</th>
-                            <th style="text-align: right;">Totale</th>
+                            <th>Quantità</th>
+                            <th>Prezzo Unitario</th>
+                            <th>Totale</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -70,26 +75,26 @@
                                             <a href="{% url 'shop:product_detail' item.product.id %}" class="product-link">
                                                 <span class="product-name">{{ item.product.name }}</span>
                                             </a>
-                                            <div style="font-size: 0.85rem; color: #71717a; margin-top: 0.2rem;">
+                                            <div class="product-desc">
                                                 {{ item.product.description|truncatewords:8 }}
                                             </div>
                                         </div>
                                     </div>
                                 </td>
-                                <td style="text-align: center; font-weight: 500;">
+                                <td>
                                     {{ item.quantity }}
                                 </td>
-                                <td style="text-align: right; color: #cbd5e1;">
+                                <td>
                                     €{{ item.price }}
                                 </td>
-                                <td style="text-align: right; font-weight: 600; color: #ffffff;">
+                                <td>
                                     €{{ item.get_cost }}
                                 </td>
                             </tr>
                         {% endfor %}
                         <tr class="total-row">
-                            <td colspan="3" style="text-align: right; border-bottom: none; padding-top: 1.5rem;">Totale Ordine:</td>
-                            <td class="total-price" style="text-align: right; border-bottom: none; padding-top: 1.5rem;">€{{ order.get_total_cost }}</td>
+                            <td colspan="3">Totale Ordine:</td>
+                            <td class="total-price">€{{ order.get_total_cost }}</td>
                         </tr>
                     </tbody>
                 </table>
@@ -100,14 +105,13 @@
     <div class="timeline-card">
         <h3 class="card-title">Stato della Spedizione</h3>
         
-        <div style="position: relative;">
-            <ul class="timeline">
-                <!-- Dynamic Height Active Progress Bar -->
-                <div class="timeline-progress" id="progress-line"></div>
+        <div class="timeline-container">
+            <ul class="timeline" data-js="timeline">
+                <div class="timeline-progress" id="progress-line" data-js="progress-line"></div>
 
-                <!-- Step 1: Ordine Ricevuto -->
-                <li class="timeline-item {% if order.return_order_number == 1 %}active{% elif order.return_order_number > 1 %}completed{% endif %}" data-step="1">
-                    <div class="timeline-bullet"></div>
+                <!-- Tutto codice per i vari stati nella timebar -->
+                <li class="timeline-item {% if order.return_order_number == 1 %}active{% elif order.return_order_number > 1 %}completed{% endif %}" data-js="timeline-item" data-step="1">
+                    <div class="timeline-bullet" data-js="timeline-bullet"></div>
                     <div class="timeline-content">
                         <span class="timeline-title">Ordine Ricevuto</span>
                         <span class="timeline-desc">
@@ -120,9 +124,8 @@
                     </div>
                 </li>
 
-                <!-- Step 2: Spedizione -->
-                <li class="timeline-item {% if order.return_order_number == 2 %}active{% elif order.return_order_number > 2 %}completed{% endif %}" data-step="2">
-                    <div class="timeline-bullet"></div>
+                <li class="timeline-item {% if order.return_order_number == 2 %}active{% elif order.return_order_number > 2 %}completed{% endif %}" data-js="timeline-item" data-step="2">
+                    <div class="timeline-bullet" data-js="timeline-bullet"></div>
                     <div class="timeline-content">
                         <span class="timeline-title">Spedizione</span>
                         <span class="timeline-desc">
@@ -137,9 +140,8 @@
                     </div>
                 </li>
 
-                <!-- Step 3: In transito -->
-                <li class="timeline-item {% if order.return_order_number == 3 %}active{% elif order.return_order_number > 3 %}completed{% endif %}" data-step="3">
-                    <div class="timeline-bullet"></div>
+                <li class="timeline-item {% if order.return_order_number == 3 %}active{% elif order.return_order_number > 3 %}completed{% endif %}" data-js="timeline-item" data-step="3">
+                    <div class="timeline-bullet" data-js="timeline-bullet"></div>
                     <div class="timeline-content">
                         <span class="timeline-title">In transito</span>
                         <span class="timeline-desc">
@@ -154,9 +156,8 @@
                     </div>
                 </li>
 
-                <!-- Step 4: In consegna -->
-                <li class="timeline-item {% if order.return_order_number == 4 %}active{% elif order.return_order_number > 4 %}completed{% endif %}" data-step="4">
-                    <div class="timeline-bullet"></div>
+                <li class="timeline-item {% if order.return_order_number == 4 %}active{% elif order.return_order_number > 4 %}completed{% endif %}" data-js="timeline-item" data-step="4">
+                    <div class="timeline-bullet" data-js="timeline-bullet"></div>
                     <div class="timeline-content">
                         <span class="timeline-title">In consegna</span>
                         <span class="timeline-desc">
@@ -171,9 +172,8 @@
                     </div>
                 </li>
 
-                <!-- Step 5: Consegnato -->
-                <li class="timeline-item {% if order.return_order_number == 5 %}active{% elif order.return_order_number > 5 %}completed{% endif %}" data-step="5">
-                    <div class="timeline-bullet"></div>
+                <li class="timeline-item {% if order.return_order_number == 5 %}active{% elif order.return_order_number > 5 %}completed{% endif %}" data-js="timeline-item" data-step="5">
+                    <div class="timeline-bullet" data-js="timeline-bullet"></div>
                     <div class="timeline-content">
                         <span class="timeline-title">Consegnato</span>
                         <span class="timeline-desc">

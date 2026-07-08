@@ -47,41 +47,24 @@ class CartAddProductForm(forms.Form):
 
 
 class OrderCreateForm(forms.ModelForm):
-    first_name = forms.CharField(
-        max_length=150,
-        label='Nome',
-        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Il tuo nome'})
-    )
-    last_name = forms.CharField(
-        max_length=150,
-        label='Cognome',
-        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Il tuo cognome'})
-    )
-    email = forms.EmailField(
-        label='Email',
-        widget=forms.EmailInput(attrs={'class': 'form-control', 'placeholder': 'La tua email'})
-    )
-
-    PAYMENT_METHOD_CHOICES = [
-        ('card', 'Carta di Credito'),
-        ('paypal', 'PayPal'),
-        ('transfer', 'Bonifico Bancario'),
-    ]
-    payment_method = forms.ChoiceField(
-        choices=PAYMENT_METHOD_CHOICES,
-        widget=forms.RadioSelect(attrs={'class': 'payment-radio'}),
-        initial='card',
-        label='Metodo di Pagamento'
-    )
-
     class Meta:
         model = Order
-        fields = ['indirizzo', 'citta', 'codice_postale', 'numero_di_telefono', 'payment_method']
+        fields = ['first_name', 'last_name', 'email', 'indirizzo', 'citta', 'codice_postale', 'numero_di_telefono', 'payment_method']
         widgets = {
+            'first_name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Il tuo nome'}),
+            'last_name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Il tuo cognome'}),
+            'email': forms.EmailInput(attrs={'class': 'form-control', 'placeholder': 'La tua email'}),
             'indirizzo': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Via/Piazza, Numero Civico'}),
             'citta': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'e.g. Roma'}),
             'codice_postale': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'e.g. 50123'}),
             'numero_di_telefono': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'e.g. +39 333 1234567'}),
+            'payment_method': forms.RadioSelect(attrs={'class': 'payment-radio'}),
+        }
+        labels = {
+            'first_name': 'Nome',
+            'last_name': 'Cognome',
+            'email': 'Email',
+            'payment_method': 'Metodo di Pagamento',
         }
 
     field_order = ['first_name', 'last_name', 'email', 'indirizzo', 'citta', 'codice_postale', 'numero_di_telefono', 'payment_method']

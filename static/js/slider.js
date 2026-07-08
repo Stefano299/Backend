@@ -1,3 +1,4 @@
+// Attende il caricamento completo del DOM
 document.addEventListener('DOMContentLoaded', function() {
     const minSlider = document.querySelector('[data-js="min-price-slider"]');
     const maxSlider = document.querySelector('[data-js="max-price-slider"]');
@@ -5,12 +6,14 @@ document.addEventListener('DOMContentLoaded', function() {
     const track = document.querySelector('[data-js="slider-track"]');
     const container = document.querySelector('[data-js="double-slider-container"]');
     
+    // Gestione del cursore a doppio range (slider per il prezzo minimo e massimo)
     if (minSlider && maxSlider && priceDisplay && track) {
+        
         function updateSlider() {
             const minVal = parseInt(minSlider.value);
             const maxVal = parseInt(maxSlider.value);
             
-            // Impedisce l'incrocio dei pallini
+            // Impedisce che il pallino del minimo superi e vada a destra di quello del massimo
             if (minVal > maxVal) {
                 minSlider.value = maxVal;
             }
@@ -18,21 +21,15 @@ document.addEventListener('DOMContentLoaded', function() {
             const finalMin = minSlider.value;
             const finalMax = maxSlider.value;
             
-            // Calcola le percentuali per colorare la barra centrale
-            const minPercent = (finalMin / minSlider.max) * 100;
-            const maxPercent = (finalMax / maxSlider.max) * 100;
-            
-            // Colora la barra tra i due pallini con colore giallo chiaro (#fde047) e sfondo grigio scuro (#27272a)
-            track.style.background = `linear-gradient(to right, #27272a ${minPercent}%, #fde047 ${minPercent}%, #fde047 ${maxPercent}%, #27272a ${maxPercent}%)`;
-            
-            // Aggiorna il testo a schermo
             priceDisplay.textContent = `€${finalMin} - €${finalMax}`;
         }
         
+        // Aggiunge i listener per aggiornare lo slider ogni volta che l'utente sposta i range
         minSlider.addEventListener('input', updateSlider);
         maxSlider.addEventListener('input', updateSlider);
         
-        // Cambia dinamicamente lo z-index a seconda di quale pallino sia più vicino al cursore del mouse
+        // Cambia dinamicamente lo z-index a seconda di quale pallino sia più vicino al puntatore del mouse.
+        // Questo serve ad evitare che un pallino rimanga bloccato sotto l'altro quando hanno lo stesso valore.
         if (container) {
             container.addEventListener('mousemove', function(e) {
                 const rect = container.getBoundingClientRect();
@@ -54,7 +51,7 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         }
         
-        // Inizializzazione
+        // Inizializza lo stato dello slider all'avvio della pagina
         updateSlider();
     }
 });

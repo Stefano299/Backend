@@ -3,10 +3,12 @@ document.addEventListener('DOMContentLoaded', function() {
     const plusBtn = document.querySelector('[data-js="qty-plus"]');
     const input = document.querySelector('[data-js="qty-input"]');
     
+    // Gestione dell'incremento e decremento della quantità di prodotti 
     if (minusBtn && plusBtn && input) {
         const minVal = parseInt(input.getAttribute('min')) || 1;
         const maxVal = parseInt(input.getAttribute('max')) || 999;
         
+        // Decrementa la quantità al click sul pulsante "-"
         minusBtn.addEventListener('click', function() {
             let currentVal = parseInt(input.value) || minVal;
             if (currentVal > minVal) {
@@ -14,6 +16,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
         
+        // Incrementa la quantità al click sul pulsante "+"
         plusBtn.addEventListener('click', function() {
             let currentVal = parseInt(input.value) || minVal;
             if (currentVal < maxVal) {

@@ -10,6 +10,7 @@ class CustomUserCreationForm(UserCreationForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        # Nascondo gli help text per la password perchè non mi piacciono visivamente nel frontend.
         if 'username' in self.fields:
             self.fields['username'].help_text = ''
         if 'password1' in self.fields:
@@ -29,9 +30,4 @@ class UserProfileForm(forms.ModelForm):
         model = CustomUser
         fields = ('first_name', 'last_name', 'email', 'indirizzo', 'citta', 'codice_postale', 'numero_di_telefono')
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.fields['email'].required = True
-        self.fields['first_name'].required = True
-        self.fields['last_name'].required = True
 
