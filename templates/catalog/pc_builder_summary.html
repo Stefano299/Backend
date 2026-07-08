@@ -1,0 +1,65 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}PC Builder - Riepilogo Configurazione{% endblock %}
+
+{% block css %}
+    <link rel="stylesheet" href="{% static 'css/pc_builder.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="summary-container">
+    <h2 class="summary-title">Riepilogo del tuo PC</h2>
+
+    {% if selected_components %}
+        <div class="summary-list">
+            {% for product in selected_components %}
+                <div class="summary-item">
+                    <div class="summary-item-info">
+                        {% for cat in product.categories.all %}
+                            <span class="summary-item-cat">{{ cat.name }}</span>
+                        {% endfor %}
+                        <span class="summary-item-name">{{ product.name }}</span>
+                    </div>
+                    <span class="summary-item-price">€{{ product.current_price }}</span>
+                </div>
+            {% endfor %}
+        </div>
+
+        <div class="summary-total">
+            <span>Prezzo Totale:</span>
+            <span>€{{ total_price|floatformat:2 }}</span>
+        </div>
+
+        {% if missing_components %}
+            <div class="compatibility-badge error">
+                <span>La configurazione è incompleta. Devi scegliere un componente per ogni categoria prima di poterlo aggiungere al carrello.</span>
+            </div>
+        {% endif %}
+
+        <div class="summary-actions">
+            <a href="{% url 'catalog:pc_builder_step' 1 %}" class="btn-sidebar-outline btn">Modifica Configurazione</a>
+            
+            {% if not missing_components %}
+                <form method="post" action="{% url 'catalog:pc_builder_summary' %}" class="inline-form">
+                    {% csrf_token %}
+                    <button type="submit" class="btn-sidebar-primary btn">Aggiungi tutto al Carrello</button>
+                </form>
+            {% else %}
+                <a href="{% url 'catalog:pc_builder_step' 1 %}" class="btn-sidebar-primary btn">Completa Configurazione</a>
+            {% endif %}
+        </div>
+        
+        <div class="summary-clear-container">
+            <a href="{% url 'catalog:pc_builder_clear' %}" data-js="clear-build" class="btn-logout js-clear-build">Cancella Configurazione</a>
+        </div>
+    {% else %}
+        <div class="empty-state">
+            <p>Non hai ancora selezionato alcun componente.</p>
+            <a href="{% url 'catalog:pc_builder_step' 1 %}" class="btn-primary">Inizia ad Assemblare</a>
+        </div>
+    {% endif %}
+</div>
+
+<script src="{% static 'js/pc_builder.js' %}"></script>
+{% endblock %}

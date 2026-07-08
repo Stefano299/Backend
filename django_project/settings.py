@@ -45,7 +45,8 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'pages.apps.PagesConfig',
-    'shop.apps.ShopConfig',
+    'catalog.apps.CatalogConfig',
+    'orders.apps.OrdersConfig',
     'accounts.apps.AccountsConfig',
 ]
 
@@ -73,7 +74,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
-                'shop.context_processors.cart',
+                'orders.context_processors.cart',
             ],
         },
     },

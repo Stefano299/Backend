@@ -1,5 +1,5 @@
 from django.shortcuts import render
-from shop.models import Product
+from catalog.models import Product
 
 def homePageView(request):
     latest_products = Product.objects.all().order_by('-id')[:3]

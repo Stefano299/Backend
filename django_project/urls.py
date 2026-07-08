@@ -24,7 +24,8 @@ urlpatterns = [
     path('accounts/', include('django.contrib.auth.urls')),
     path('accounts/', include('accounts.urls')),
     path('', include('pages.urls')),
-    path('shop/', include('shop.urls')),
+    path('shop/', include('catalog.urls')),
+    path('shop/', include('orders.urls')),
 ]
 
 # Per mostrare immagini quando è in locale
