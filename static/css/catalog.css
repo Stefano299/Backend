@@ -350,6 +350,29 @@
     color: #ffffff;
 }
 
+.catalog-tags {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.catalog-tag {
+    background: #27272a;
+    color: #cbd5e1;
+    border: 1px solid #3f3f46;
+    padding: 0.2rem 0.5rem;
+    border-radius: 2px;
+    font-size: 0.75rem;
+    font-weight: 500;
+}
+
+.catalog-tag.out-of-stock-tag {
+    background: rgba(239, 68, 68, 0.1);
+    color: #f87171;
+    border-color: #dc2626;
+}
+
 .product-card-rating {
     display: flex;
     align-items: center;

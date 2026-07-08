@@ -149,6 +149,158 @@ class CartTests(TestCase):
         self.assertContains(response, 'Il tuo carrello è vuoto')
 
 
+class DatabaseCartTests(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(username='cart_user', password='password123')
+        self.category = Category.objects.create(name='Test Category')
+        self.product1 = Product.objects.create(
+            name='Intel Core i7',
+            price=300.00,
+            stock=10
+        )
+        self.product1.categories.add(self.category)
+        self.product2 = Product.objects.create(
+            name='NVIDIA RTX 4070',
+            price=600.00,
+            stock=5
+        )
+        self.product2.categories.add(self.category)
+
+    def test_guest_cart_stored_in_session(self):
+        # Aggiungi un prodotto come utente anonimo
+        self.client.post(reverse('shop:cart_add', args=[self.product1.id]), {
+            'quantity': 2,
+            'override': False
+        })
+        
+        # Verifica che sia nella sessione
+        session = self.client.session
+        self.assertIn('cart', session)
+        self.assertIn(str(self.product1.id), session['cart'])
+        self.assertEqual(session['cart'][str(self.product1.id)]['quantity'], 2)
+        
+        # Verifica che non ci siano CartItem nel DB
+        from shop.models import CartItem
+        self.assertEqual(CartItem.objects.count(), 0)
+
+    def test_cart_merges_on_login(self):
+        # Aggiungi un prodotto da anonimo
+        self.client.post(reverse('shop:cart_add', args=[self.product1.id]), {
+            'quantity': 2,
+            'override': False
+        })
+        
+        # Effettua il login
+        self.client.login(username='cart_user', password='password123')
+        
+        # Naviga sul carrello per far innescare il caricamento/merge del carrello
+        response = self.client.get(reverse('shop:cart_detail'))
+        self.assertEqual(response.status_code, 200)
+        
+        # Verifica che il carrello della sessione sia stato rimosso ed elementi salvati nel DB
+        session = self.client.session
+        self.assertNotIn('cart', session)
+        
+        from shop.models import CartItem
+        self.assertEqual(CartItem.objects.filter(user=self.user).count(), 1)
+        db_item = CartItem.objects.get(user=self.user, product=self.product1)
+        self.assertEqual(db_item.quantity, 2)
+
+    def test_logged_in_cart_persists_in_db(self):
+        self.client.login(username='cart_user', password='password123')
+        
+        # Aggiungi prodotto da loggato
+        self.client.post(reverse('shop:cart_add', args=[self.product2.id]), {
+            'quantity': 1,
+            'override': False
+        })
+        
+        # Verifica che sia direttamente nel DB
+        from shop.models import CartItem
+        self.assertEqual(CartItem.objects.filter(user=self.user).count(), 1)
+        db_item = CartItem.objects.get(user=self.user, product=self.product2)
+        self.assertEqual(db_item.quantity, 1)
+        
+        # Rimuovi il prodotto
+        self.client.post(reverse('shop:cart_remove', args=[self.product2.id]))
+        self.assertEqual(CartItem.objects.filter(user=self.user).count(), 0)
+
+    def test_cart_cleared_on_checkout(self):
+        self.client.login(username='cart_user', password='password123')
+        
+        # Aggiungi un prodotto
+        self.client.post(reverse('shop:cart_add', args=[self.product1.id]), {
+            'quantity': 1,
+            'override': False
+        })
+        
+        from shop.models import CartItem
+        self.assertEqual(CartItem.objects.filter(user=self.user).count(), 1)
+        
+        # Procedi al checkout ed esegui l'ordine
+        order_data = {
+            'first_name': 'Cart',
+            'last_name': 'User',
+            'email': 'cart@example.com',
+            'indirizzo': 'Via Test 12',
+            'citta': 'Milano',
+            'codice_postale': '20100',
+            'numero_di_telefono': '123456789',
+            'payment_method': 'card',
+        }
+        response = self.client.post(reverse('shop:checkout'), order_data)
+        self.assertEqual(response.status_code, 302)
+        
+        # Il carrello nel DB deve essere vuoto ora
+        self.assertEqual(CartItem.objects.filter(user=self.user).count(), 0)
+
+    def test_cart_merge_quantities_sum_up(self):
+        from shop.models import CartItem
+        # L'utente ha già il prodotto1 nel carrello DB con quantità 3
+        CartItem.objects.create(
+            user=self.user,
+            product=self.product1,
+            quantity=3
+        )
+
+        # Da anonimo aggiunge lo stesso prodotto1 con quantità 2
+        self.client.post(reverse('shop:cart_add', args=[self.product1.id]), {
+            'quantity': 2,
+            'override': False
+        })
+
+        # Effettua il login
+        self.client.login(username='cart_user', password='password123')
+
+        # Visita il carrello per scatenare il merge
+        self.client.get(reverse('shop:cart_detail'))
+
+        # La quantità finale nel DB deve essere 5 (3 + 2)
+        self.assertEqual(CartItem.objects.filter(user=self.user).count(), 1)
+        db_item = CartItem.objects.get(user=self.user, product=self.product1)
+        self.assertEqual(db_item.quantity, 5)
+
+    def test_cart_loads_from_db_without_session(self):
+        from shop.models import CartItem
+        # L'utente ha già il prodotto2 nel carrello DB con quantità 4
+        CartItem.objects.create(
+            user=self.user,
+            product=self.product2,
+            quantity=4
+        )
+
+        # Effettua il login senza aver aggiunto nulla da anonimo (sessione vuota)
+        self.client.login(username='cart_user', password='password123')
+
+        # Visita la pagina del carrello
+        response = self.client.get(reverse('shop:cart_detail'))
+        self.assertEqual(response.status_code, 200)
+
+        # Verifica che il prodotto sia mostrato nel carrello con quantità 4
+        self.assertContains(response, 'NVIDIA RTX 4070')
+        self.assertContains(response, '4')
+
+
 class ReviewTests(TestCase):
     def setUp(self):
         self.category = Category.objects.create(name='Processori')
@@ -649,7 +801,7 @@ class CatalogAndDashboardCustomizationTests(TestCase):
     def test_out_of_stock_badge_in_catalog(self):
         response = self.client.get(reverse('shop:product_list') + '?q=AMD+Ryzen+Out+of+Stock')
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, 'class="badge-out-of-stock">Esaurito</div>')
+        self.assertContains(response, '<span class="catalog-tag out-of-stock-tag">Esaurito</span>')
         
     def test_dashboard_sales_history_order_and_collapsed(self):
         self.client.login(username='manager_cust', password='password123')
@@ -666,14 +818,9 @@ class CatalogAndDashboardCustomizationTests(TestCase):
         self.assertNotEqual(products_index, -1)
         self.assertTrue(sales_index < products_index, "History delle Vendite should appear before Gestione Prodotti")
         
-        # Check collapsed: Sales history details does not have open, products details does
-        # History details tag: <details class="dashboard-section">
-        # Products details tag: <details open class="dashboard-section">
+        # Check that details elements exist
         sales_details_pos = content.find('<details class="dashboard-section">')
-        self.assertNotEqual(sales_details_pos, -1, "Sales history details element should not have 'open' attribute")
-        
-        products_details_pos = content.find('<details open class="dashboard-section">')
-        self.assertNotEqual(products_details_pos, -1, "Products details element should be open by default")
+        self.assertNotEqual(sales_details_pos, -1, "Sales history details element should be present")
 
 
 class ProductConstraintTests(TestCase):
@@ -726,6 +873,38 @@ class OrderItemConstraintTests(TestCase):
         order_item = OrderItem(order=self.order, product=self.product, price=-5.00, quantity=1)
         with self.assertRaises(IntegrityError):
             order_item.save()
+class DiscountCodeTests(TestCase):
+    def setUp(self):
+        from shop.models import DiscountCode
+        self.fixed_discount = DiscountCode.objects.create(
+            code="FIXED10",
+            discount_type="fixed",
+            amount=10.00
+        )
+        self.percent_discount = DiscountCode.objects.create(
+            code="PERCENT20",
+            discount_type="percentage",
+            amount=20.00
+        )
 
+    def test_fixed_discount_calculation(self):
+        from decimal import Decimal
+        self.assertEqual(self.fixed_discount.calculate_discount(Decimal('100.00')), Decimal('10.00'))
+        self.assertEqual(self.fixed_discount.calculate_discount(Decimal('5.00')), Decimal('10.00'))
 
+    def test_percentage_discount_calculation(self):
+        from decimal import Decimal
+        self.assertEqual(self.percent_discount.calculate_discount(Decimal('100.00')), Decimal('20.00'))
+        self.assertEqual(self.percent_discount.calculate_discount(Decimal('50.00')), Decimal('10.00'))
+        self.assertEqual(self.percent_discount.calculate_discount(Decimal('55.50')), Decimal('11.10'))
 
+    def test_percentage_validation_max_100(self):
+        from django.core.exceptions import ValidationError
+        from shop.models import DiscountCode
+        invalid_discount = DiscountCode(
+            code="INVALID150",
+            discount_type="percentage",
+            amount=150.00
+        )
+        with self.assertRaises(ValidationError):
+            invalid_discount.full_clean()

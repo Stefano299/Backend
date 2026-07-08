@@ -89,6 +89,14 @@
                         </div>
                         <div class="card-content">
                             <h3 class="card-title">{{ product.name }}</h3>
+                            <div class="catalog-tags">
+                                {% for cat in product.categories.all %}
+                                    <span class="catalog-tag">{{ cat.name }}</span>
+                                {% endfor %}
+                                {% if product.stock <= 0 %}
+                                    <span class="catalog-tag out-of-stock-tag">Esaurito</span>
+                                {% endif %}
+                            </div>
                             <div class="product-card-rating">
                                 {% if product.get_average_rating %}
                                     <span class="rating-stars">
@@ -103,9 +111,7 @@
                                     <span class="rating-no-reviews-catalog">Nessuna recensione</span>
                                 {% endif %}
                             </div>
-                            {% if product.stock <= 0 %}
-                                <div class="badge-out-of-stock">Esaurito</div>
-                            {% endif %}
+
                             <p class="card-desc">{{ product.description|truncatewords:15 }}</p>
                             <div class="card-bottom">
                                 {% if product.discount_price %}
