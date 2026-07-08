@@ -233,6 +233,30 @@
     font-size: 1.2rem;
 }
 
+.product-price-original {
+    text-decoration: line-through;
+    color: #71717a;
+    font-size: 0.85rem;
+    margin-right: 5px;
+}
+
+.product-price-discount {
+    color: #10b981;
+    font-weight: bold;
+}
+
+.summary-item-price-original {
+    text-decoration: line-through;
+    color: #71717a;
+    font-size: 0.85rem;
+    margin-right: 5px;
+}
+
+.summary-item-price-discount {
+    color: #10b981;
+    font-weight: bold;
+}
+
 .btn-select {
     background-color: transparent;
     color: #f59e0b;

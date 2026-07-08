@@ -1,0 +1,56 @@
+.error-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 70vh;
+    padding: 2rem;
+}
+
+.error-card {
+    background: #1a1a1a;
+    border: 1px solid #27272a;
+    border-radius: 2px;
+    padding: 3rem 2rem;
+    max-width: 500px;
+    width: 100%;
+    text-align: center;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+}
+
+.error-code {
+    font-size: 4rem;
+    font-weight: 700;
+    color: #ef4444;
+    margin: 0 0 1rem 0;
+    letter-spacing: 3px;
+}
+
+.error-title {
+    font-size: 1.8rem;
+    color: #f59e0b;
+    margin: 0 0 1.5rem 0;
+}
+
+.error-message {
+    color: #a1a1aa;
+    font-size: 1rem;
+    margin-bottom: 2rem;
+    line-height: 1.6;
+}
+
+.error-btn {
+    display: inline-block;
+    background: transparent;
+    color: #f59e0b;
+    border: 1px solid #f59e0b;
+    padding: 0.8rem 2rem;
+    border-radius: 2px;
+    font-weight: 600;
+    text-decoration: none;
+    transition: all 0.15s;
+}
+
+.error-btn:hover {
+    background: #f59e0b;
+    color: #121212;
+}

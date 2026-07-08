@@ -67,6 +67,18 @@
     color: #a1a1aa;
 }
 
+.item-price-original {
+    text-decoration: line-through;
+    color: #71717a;
+    font-size: 0.85rem;
+    margin-right: 5px;
+}
+
+.item-price-discount {
+    color: #10b981;
+    font-weight: bold;
+}
+
 .item-actions {
     display: flex;
     align-items: center;

@@ -1,0 +1,49 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Profilo Utente - PC Parts Builder{% endblock %}
+
+{% block css %}
+    <link rel="stylesheet" href="{% static 'css/auth.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="auth-wrapper" style="max-width: 500px; margin: 0 auto;">
+    <div class="auth-card" style="max-width: 100%;">
+        <h1 class="auth-title">Il Mio Profilo</h1>
+        <p class="auth-subtitle">Visualizza e aggiorna i tuoi dati personali.</p>
+        
+        {% if form.errors %}
+            <div class="alert-error">
+                Ci sono errori nel modulo:
+                <ul class="error-list">
+                    {% for field in form %}
+                        {% for error in field.errors %}
+                            <li>{{ field.label }}: {{ error }}</li>
+                        {% endfor %}
+                    {% endfor %}
+                    {% for error in form.non_field_errors %}
+                        <li>{{ error }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        {% endif %}
+        
+        <form method="post" class="auth-form">
+            {% csrf_token %}
+            
+            {% for field in form %}
+                <div class="input-group">
+                    <label>{{ field.label }}</label>
+                    {{ field }}
+                    {% if field.help_text %}
+                        <small class="help-text">{{ field.help_text }}</small>
+                    {% endif %}
+                </div>
+            {% endfor %}
+            
+            <button type="submit" class="btn-auth">Aggiorna Profilo</button>
+        </form>
+    </div>
+</div>
+{% endblock %}

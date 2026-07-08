@@ -4,7 +4,7 @@
 {% block title %}{{ product.name }} - PC Parts Builder{% endblock %}
 
 {% block css %}
-    <link rel="stylesheet" href="{% static 'css/detail.css' %}?v=1.6">
+    <link rel="stylesheet" href="{% static 'css/detail.css' %}?t={% now 'U' %}">
 {% endblock %}
 
 {% block content %}
@@ -53,7 +53,14 @@
 
         <p class="description">{{ product.description|default:"Nessuna descrizione." }}</p>
         
-        <div class="price">€{{ product.price }}</div>
+        {% if product.discount_price %}
+            <div class="price-wrapper">
+                <span class="price-original">€{{ product.price }}</span>
+                <span class="price-discount">€{{ product.discount_price }}</span>
+            </div>
+        {% else %}
+            <div class="price">€{{ product.price }}</div>
+        {% endif %}
 
         {% if product.stock > 0 %}
             <form action="{% url 'shop:cart_add' product.id %}" method="post" class="add-to-cart">

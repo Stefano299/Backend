@@ -115,6 +115,26 @@
     margin-bottom: 1.5rem;
 }
 
+.price-original {
+    font-size: 1.8rem;
+    text-decoration: line-through;
+    color: #71717a;
+    margin-right: 1rem;
+    display: inline-block;
+}
+
+.price-discount {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: #10b981;
+    display: inline-block;
+    margin-bottom: 1.5rem;
+}
+
+.price-wrapper {
+    margin-bottom: 1.5rem;
+}
+
 .add-to-cart {
     display: flex;
     gap: 1.5rem;

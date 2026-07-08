@@ -13,7 +13,7 @@ class Cart:
     def add(self, product, quantity=1, override_quantity=False):
         product_id = str(product.id)
         if product_id not in self.cart:
-            self.cart[product_id] = {'quantity': 0, 'price': str(product.price)}
+            self.cart[product_id] = {'quantity': 0, 'price': str(product.current_price)}
         
         if override_quantity:
             self.cart[product_id]['quantity'] = quantity
@@ -51,6 +51,7 @@ class Cart:
         
         for product in products:
             self.cart[str(product.id)]['product'] = product
+            self.cart[str(product.id)]['price'] = str(product.current_price)
 
         elementi_carrello = []
         for item in self.cart.values():

@@ -58,7 +58,14 @@
                                     <p>{{ product.description }}</p>
                                 </div>
                                 <div class="product-meta">
-                                    <span class="product-price">€{{ product.price }}</span>
+                                    <span class="product-price">
+                                        {% if product.discount_price %}
+                                            <span class="product-price-original">€{{ product.price }}</span>
+                                            <span class="product-price-discount">€{{ product.discount_price }}</span>
+                                        {% else %}
+                                            €{{ product.price }}
+                                        {% endif %}
+                                    </span>
                                     <form method="post" action="{% url 'shop:pc_builder_step' step %}">
                                         {% csrf_token %}
                                         <input type="hidden" name="product_id" value="{{ product.id }}">
@@ -86,7 +93,7 @@
                             <span class="slot-label" style="display: block;">{{ s.name }}</span>
                             {% if s.product %}
                                 <div class="slot-val filled" title="{{ s.product.name }}">{{ s.product.name }}</div>
-                                <div style="font-size: 0.75rem; color: #fbbf24;">€{{ s.product.price }}</div>
+                                <div style="font-size: 0.75rem; color: #fbbf24;">€{{ s.product.current_price }}</div>
                             {% else %}
                                 <div class="slot-val">— Da selezionare —</div>
                             {% endif %}

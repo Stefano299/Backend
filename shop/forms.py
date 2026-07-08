@@ -7,15 +7,26 @@ class CustomClearableFileInput(forms.ClearableFileInput):
 class ProductForm(forms.ModelForm):
     class Meta:
         model = Product
-        fields = ['name', 'description', 'price', 'stock', 'image', 'categories']
+        fields = ['name', 'description', 'price', 'discount_price', 'stock', 'image', 'categories']
         widgets = {
             'name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Nome del Prodotto'}),
             'description': forms.Textarea(attrs={'class': 'form-control', 'rows': 4, 'placeholder': 'Descrizione...'}),
             'price': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01', 'min': '0'}),
+            'discount_price': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01', 'min': '0', 'placeholder': 'Lascia vuoto se non scontato'}),
             'stock': forms.NumberInput(attrs={'class': 'form-control', 'min': '0'}),
             'image': CustomClearableFileInput(attrs={'class': 'form-control'}),
             'categories': forms.CheckboxSelectMultiple(attrs={'class': 'category-checkboxes'}),
         }
+
+    def clean(self):
+        cleaned_data = super().clean()
+        price = cleaned_data.get('price')
+        discount_price = cleaned_data.get('discount_price')
+        
+        if price is not None and discount_price is not None:
+            if discount_price >= price:
+                self.add_error('discount_price', 'Il prezzo scontato deve essere inferiore al prezzo originale.')
+        return cleaned_data
 
 class CategoryForm(forms.ModelForm):
     class Meta:
@@ -36,6 +47,21 @@ class CartAddProductForm(forms.Form):
 
 
 class OrderCreateForm(forms.ModelForm):
+    first_name = forms.CharField(
+        max_length=150,
+        label='Nome',
+        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Il tuo nome'})
+    )
+    last_name = forms.CharField(
+        max_length=150,
+        label='Cognome',
+        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Il tuo cognome'})
+    )
+    email = forms.EmailField(
+        label='Email',
+        widget=forms.EmailInput(attrs={'class': 'form-control', 'placeholder': 'La tua email'})
+    )
+
     PAYMENT_METHOD_CHOICES = [
         ('card', 'Carta di Credito'),
         ('paypal', 'PayPal'),
@@ -57,6 +83,8 @@ class OrderCreateForm(forms.ModelForm):
             'codice_postale': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'e.g. 50123'}),
             'numero_di_telefono': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'e.g. +39 333 1234567'}),
         }
+
+    field_order = ['first_name', 'last_name', 'email', 'indirizzo', 'citta', 'codice_postale', 'numero_di_telefono', 'payment_method']
 
 
 class OrderEditForm(forms.ModelForm):

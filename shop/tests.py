@@ -10,6 +10,8 @@ class ManagerDashboardTests(TestCase):
     def setUp(self):
         # Create groups
         self.manager_group, _ = Group.objects.get_or_create(name='Store Manager')
+        from django.contrib.auth.models import Permission
+        self.manager_group.permissions.add(*Permission.objects.filter(content_type__app_label='shop'))
         
         # Create users
         self.customer = User.objects.create_user(username='customer1', password='password123')
@@ -18,6 +20,9 @@ class ManagerDashboardTests(TestCase):
         self.manager.groups.add(self.manager_group)
         
         self.staff_user = User.objects.create_user(username='staff1', password='password123', is_staff=True)
+        from django.contrib.auth.models import Permission
+        view_product_perm = Permission.objects.get(codename='view_product', content_type__app_label='shop')
+        self.staff_user.user_permissions.add(view_product_perm)
         
         # Create sample models
         self.category = Category.objects.create(name='Processori')
@@ -273,8 +278,9 @@ class ReviewTests(TestCase):
 
     def test_manager_can_delete_review(self):
         review = Review.objects.create(product=self.product, user=self.buyer, rating=5, comment='Bella!')
-        from django.contrib.auth.models import Group
+        from django.contrib.auth.models import Group, Permission
         manager_group, _ = Group.objects.get_or_create(name='Store Manager')
+        manager_group.permissions.add(*Permission.objects.filter(content_type__app_label='shop'))
         manager = User.objects.create_user(username='manager_review', password='password123')
         manager.groups.add(manager_group)
         
@@ -454,6 +460,8 @@ class ProductImageTests(TestCase):
 
     def setUp(self):
         self.manager_group, _ = Group.objects.get_or_create(name='Store Manager')
+        from django.contrib.auth.models import Permission
+        self.manager_group.permissions.add(*Permission.objects.filter(content_type__app_label='shop'))
         self.manager = User.objects.create_user(username='manager_img', password='password123')
         self.manager.groups.add(self.manager_group)
         self.category = Category.objects.create(name='Processori')
@@ -488,5 +496,232 @@ class ProductImageTests(TestCase):
             stock=15
         )
         self.assertEqual(product.image.url, "/media/products/default.png")
+
+
+class CheckoutTests(TestCase):
+    def setUp(self):
+        self.customer = User.objects.create_user(
+            username='customer_chk',
+            password='password123',
+            email='old@example.com',
+            first_name='OldFirst',
+            last_name='OldLast'
+        )
+        self.product = Product.objects.create(
+            name='Test Product',
+            price=50.00,
+            stock=10
+        )
+
+    def test_checkout_prepopulated_fields(self):
+        self.client.login(username='customer_chk', password='password123')
+        
+        # Add product to cart
+        session = self.client.session
+        session['cart'] = {
+            str(self.product.id): {
+                'quantity': 1,
+                'price': str(self.product.price)
+            }
+        }
+        session.save()
+
+        response = self.client.get(reverse('shop:checkout'))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'OldFirst')
+        self.assertContains(response, 'OldLast')
+        self.assertContains(response, 'old@example.com')
+
+    def test_checkout_saves_and_updates_profile(self):
+        self.client.login(username='customer_chk', password='password123')
+        
+        # Add product to cart
+        session = self.client.session
+        session['cart'] = {
+            str(self.product.id): {
+                'quantity': 1,
+                'price': str(self.product.price)
+            }
+        }
+        session.save()
+
+        post_data = {
+            'first_name': 'NewFirst',
+            'last_name': 'NewLast',
+            'email': 'new@example.com',
+            'indirizzo': 'Via Nuova 5',
+            'citta': 'Torino',
+            'codice_postale': '10100',
+            'numero_di_telefono': '0987654321',
+            'payment_method': 'paypal'
+        }
+
+        response = self.client.post(reverse('shop:checkout'), data=post_data)
+        
+        # Should redirect to order success page
+        self.assertEqual(response.status_code, 302)
+        
+        # Verify user profile was updated
+        self.customer.refresh_from_db()
+        self.assertEqual(self.customer.first_name, 'NewFirst')
+        self.assertEqual(self.customer.last_name, 'NewLast')
+        self.assertEqual(self.customer.email, 'new@example.com')
+        self.assertEqual(self.customer.indirizzo, 'Via Nuova 5')
+        self.assertEqual(self.customer.citta, 'Torino')
+        self.assertEqual(self.customer.codice_postale, '10100')
+        self.assertEqual(self.customer.numero_di_telefono, '0987654321')
+
+        # Verify order was created
+        self.assertTrue(Order.objects.filter(user=self.customer, payment_method='paypal').exists())
+
+        # Verify product stock was decremented
+        self.product.refresh_from_db()
+        self.assertEqual(self.product.stock, 9)
+
+
+class CatalogPaginationTests(TestCase):
+    def setUp(self):
+        self.category = Category.objects.create(name='Test Category')
+        # Creiamo 15 prodotti per testare la paginazione di 12 per pagina
+        for i in range(15):
+            p = Product.objects.create(
+                name=f'Product {i:02d}',
+                price=10.00 + i,
+                stock=5
+            )
+            p.categories.add(self.category)
+
+    def test_catalog_pagination_first_page(self):
+        response = self.client.get(reverse('shop:product_list') + f'?categories={self.category.id}&sort=name_asc')
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context['products'].paginator.count, 15)
+        self.assertEqual(len(response.context['products']), 12)
+        # Check active button 1
+        self.assertContains(response, 'class="pagination-btn active">1</span>')
+        self.assertContains(response, 'Product 00')
+        self.assertNotContains(response, 'Product 13')
+
+    def test_catalog_pagination_second_page(self):
+        response = self.client.get(reverse('shop:product_list') + f'?categories={self.category.id}&page=2&sort=name_asc')
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(response.context['products']), 3)
+        # Check active button 2
+        self.assertContains(response, 'class="pagination-btn active">2</span>')
+        self.assertContains(response, 'Product 13')
+        self.assertNotContains(response, 'Product 00')
+
+    def test_catalog_pagination_invalid_page(self):
+        response = self.client.get(reverse('shop:product_list') + f'?categories={self.category.id}&page=abc')
+        self.assertEqual(response.status_code, 404)
+
+        response = self.client.get(reverse('shop:product_list') + f'?categories={self.category.id}&page=999')
+        self.assertEqual(response.status_code, 404)
+
+
+class CatalogAndDashboardCustomizationTests(TestCase):
+    def setUp(self):
+        self.category = Category.objects.create(name='Test Category')
+        self.out_of_stock_product = Product.objects.create(
+            name='AMD Ryzen Out of Stock',
+            price=200.00,
+            stock=0
+        )
+        self.out_of_stock_product.categories.add(self.category)
+        
+        self.in_stock_product = Product.objects.create(
+            name='AMD Ryzen In Stock',
+            price=220.00,
+            stock=5
+        )
+        self.in_stock_product.categories.add(self.category)
+
+        # Create manager user
+        self.manager_group, _ = Group.objects.get_or_create(name='Store Manager')
+        from django.contrib.auth.models import Permission
+        self.manager_group.permissions.add(*Permission.objects.filter(content_type__app_label='shop'))
+        self.manager = User.objects.create_user(username='manager_cust', password='password123')
+        self.manager.groups.add(self.manager_group)
+
+    def test_out_of_stock_badge_in_catalog(self):
+        response = self.client.get(reverse('shop:product_list') + '?q=AMD+Ryzen+Out+of+Stock')
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'class="badge-out-of-stock">Esaurito</div>')
+        
+    def test_dashboard_sales_history_order_and_collapsed(self):
+        self.client.login(username='manager_cust', password='password123')
+        response = self.client.get(reverse('shop:manager_dashboard'))
+        self.assertEqual(response.status_code, 200)
+        
+        content = response.content.decode('utf-8')
+        
+        # Check order: "History delle Vendite" is before "Gestione Prodotti"
+        sales_index = content.find('<h2>History delle Vendite</h2>')
+        products_index = content.find('<h2>Gestione Prodotti</h2>')
+        
+        self.assertNotEqual(sales_index, -1)
+        self.assertNotEqual(products_index, -1)
+        self.assertTrue(sales_index < products_index, "History delle Vendite should appear before Gestione Prodotti")
+        
+        # Check collapsed: Sales history details does not have open, products details does
+        # History details tag: <details class="dashboard-section">
+        # Products details tag: <details open class="dashboard-section">
+        sales_details_pos = content.find('<details class="dashboard-section">')
+        self.assertNotEqual(sales_details_pos, -1, "Sales history details element should not have 'open' attribute")
+        
+        products_details_pos = content.find('<details open class="dashboard-section">')
+        self.assertNotEqual(products_details_pos, -1, "Products details element should be open by default")
+
+
+class ProductConstraintTests(TestCase):
+    def test_negative_price_raises_validation_error(self):
+        from django.core.exceptions import ValidationError
+        product = Product(name="Negative Price CPU", price=-10.00, stock=5)
+        with self.assertRaises(ValidationError):
+            product.full_clean()
+
+    def test_negative_stock_raises_validation_error(self):
+        from django.core.exceptions import ValidationError
+        product = Product(name="Negative Stock CPU", price=10.00, stock=-5)
+        with self.assertRaises(ValidationError):
+            product.full_clean()
+
+    def test_negative_price_database_constraint(self):
+        from django.db import IntegrityError
+        product = Product(name="Negative Price DB CPU", price=-10.00, stock=5)
+        with self.assertRaises(IntegrityError):
+            product.save()
+
+    def test_negative_stock_database_constraint(self):
+        from django.db import IntegrityError
+        product = Product(name="Negative Stock DB CPU", price=10.00, stock=-5)
+        with self.assertRaises(IntegrityError):
+            product.save()
+
+
+class OrderItemConstraintTests(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(username='test_user_constraint', password='password123')
+        self.category = Category.objects.create(name='Test Category Constraint')
+        self.product = Product.objects.create(name='Test Product Constraint', price=10.00, stock=5)
+        self.order = Order.objects.create(
+            user=self.user,
+            indirizzo='Test address',
+            citta='Test city',
+            codice_postale='12345',
+            numero_di_telefono='1234567'
+        )
+
+    def test_negative_price_raises_validation_error(self):
+        from django.core.exceptions import ValidationError
+        order_item = OrderItem(order=self.order, product=self.product, price=-5.00, quantity=1)
+        with self.assertRaises(ValidationError):
+            order_item.full_clean()
+
+    def test_negative_price_database_constraint(self):
+        from django.db import IntegrityError
+        order_item = OrderItem(order=self.order, product=self.product, price=-5.00, quantity=1)
+        with self.assertRaises(IntegrityError):
+            order_item.save()
+
 
 

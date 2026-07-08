@@ -1,5 +1,9 @@
 /* Style for Order List and Order Detail pages */
 
+.page-header h1 {
+    color: #f59e0b;
+}
+
 .orders-container {
     display: flex;
     flex-direction: column;

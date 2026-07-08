@@ -1,99 +1,124 @@
 from django.shortcuts import render, get_object_or_404, redirect
-from django.db.models import Max
-from django.contrib.auth.decorators import login_required
+from django.contrib.auth.decorators import login_required, permission_required
+from django.contrib import messages
 from django.core.exceptions import PermissionDenied
 from django.urls import reverse_lazy
-from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
-from django.views.generic import TemplateView
-from django.views import View
+from django.views.decorators.http import require_POST
 from django.http import Http404
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
+from django.views.generic import CreateView, UpdateView, DeleteView, ListView, DetailView, TemplateView
 from .models import Product, Category, Order, OrderItem, Review
 from .cart import Cart
 from .forms import CartAddProductForm, OrderCreateForm, ProductForm, CategoryForm, OrderEditForm, ReviewForm
 
 
-def product_list(request):
-    products = Product.objects.all()
-    categories = Category.objects.all()
+# ==========================================
+# 1. CATALOG & PRODUCTS
+# ==========================================
 
-    # Calcola prezzo massimo prodotti nel database
-    risultato_aggregazione = Product.objects.aggregate(prezzo_massimo=Max('price'))
-    max_db_price = risultato_aggregazione['prezzo_massimo']
+class ProductListView(ListView):
+    model = Product
+    template_name = "shop/catalog.html"
+    context_object_name = "products"
+    paginate_by = 12
 
-    # Se non ci sono prodotti usa prezzo massimo di default
-    if max_db_price:
-        max_limit = int(max_db_price)
-    else:
-        max_limit = 1000
-
-    # Filtro categoria (multiplo)
-    category_ids = request.GET.getlist('categories')
-    if category_ids:
-        products = products.filter(categories__id__in=category_ids).distinct()
-
-    # Ricerca
-    search_query = request.GET.get('q')
-    if search_query:
-        products = products.filter(name__icontains=search_query)
-
-    # Filtro prezzo 
-    min_price = request.GET.get('min_price')
-    max_price = request.GET.get('max_price')
-    if min_price:
-        products = products.filter(price__gte=min_price)
-    if max_price:
-        products = products.filter(price__lte=max_price)
-
-    return render(request, "shop/catalog.html", {
-        "products": products,
-        "categories": categories,
-        "selected_categories": category_ids,
-        "search_query": search_query,
-        "min_price": min_price,
-        "max_price": max_price,
-        "max_limit": max_limit,
-    })
-
-def product_detail(request, pk):
-    product = get_object_or_404(Product, pk=pk)
-    cart_product_form = CartAddProductForm()
-    
-    # Carica le recensioni per questo prodotto
-    reviews = product.reviews.all().order_by('-created_at')
-    
-    # Calcola la media delle recensioni
-    if reviews.exists():
-        from django.db.models import Avg
-        avg_rating = reviews.aggregate(Avg('rating'))['rating__avg']
-        avg_rating = round(avg_rating, 1)
-        stars_filled = range(int(round(avg_rating)))
-        stars_empty = range(5 - int(round(avg_rating)))
-    else:
-        avg_rating = None
-        stars_filled = None
-        stars_empty = None
-    
-    # Verifica se l'utente può inserire una recensione (ha comprato il prodotto e non ha già recensito)
-    can_review = False
-    already_reviewed = False
-    if request.user.is_authenticated:
-        has_purchased = OrderItem.objects.filter(order__user=request.user, product=product).exists()
-        already_reviewed = Review.objects.filter(product=product, user=request.user).exists()
-        can_review = has_purchased and not already_reviewed
+    def get_queryset(self):
+        from django.db.models.functions import Coalesce
+        queryset = super().get_queryset().annotate(
+            active_price=Coalesce('discount_price', 'price')
+        )
         
-    review_form = ReviewForm()
-    
-    return render(request, "shop/detail.html", {
-        "product": product,
-        "cart_product_form": cart_product_form,
-        "reviews": reviews,
-        "can_review": can_review,
-        "already_reviewed": already_reviewed,
-        "review_form": review_form,
-        "avg_rating": avg_rating,
-        "stars_filled": stars_filled,
-        "stars_empty": stars_empty
-    })
+        # Filtro categoria (multiplo)
+        category_ids = self.request.GET.getlist('categories')
+        if category_ids:
+            queryset = queryset.filter(categories__id__in=category_ids).distinct()
+
+        # Ricerca
+        search_query = self.request.GET.get('q')
+        if search_query:
+            queryset = queryset.filter(name__icontains=search_query)
+
+        # Filtro prezzo 
+        min_price = self.request.GET.get('min_price')
+        max_price = self.request.GET.get('max_price')
+        if min_price:
+            queryset = queryset.filter(active_price__gte=min_price)
+        if max_price:
+            queryset = queryset.filter(active_price__lte=max_price)
+            
+        # Ordinamento
+        sort_by = self.request.GET.get('sort')
+        if not sort_by:
+            sort_by = 'newest'
+            
+        if sort_by == 'price_asc':
+            queryset = queryset.order_by('active_price', 'id')
+        elif sort_by == 'price_desc':
+            queryset = queryset.order_by('-active_price', 'id')
+        elif sort_by == 'name_asc':
+            queryset = queryset.order_by('name', 'id')
+        elif sort_by == 'newest':
+            queryset = queryset.order_by('-id')
+        else:
+            queryset = queryset.order_by('-id')
+            
+        return queryset
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        
+        # Calcola prezzo massimo prodotti nel database
+        from django.db.models.functions import Coalesce
+        most_expensive_product = Product.objects.annotate(
+            active_price=Coalesce('discount_price', 'price')
+        ).order_by('-active_price').first()
+        max_db_price = most_expensive_product.active_price if most_expensive_product else 1000
+        context['max_limit'] = int(max_db_price)
+        
+        context['categories'] = Category.objects.all()
+        context['selected_categories'] = self.request.GET.getlist('categories')
+        context['search_query'] = self.request.GET.get('q')
+        context['min_price'] = self.request.GET.get('min_price')
+        context['max_price'] = self.request.GET.get('max_price')
+        context['sort_by'] = self.request.GET.get('sort', 'newest')
+        
+        # Costruisci la query string per mantenere i filtri nella paginazione
+        query_params = self.request.GET.copy()
+        if 'page' in query_params:
+            del query_params['page']
+        context['query_string'] = query_params.urlencode()
+        
+        if context.get('page_obj'):
+            context['products'] = context['page_obj']
+            
+        return context
+
+class ProductDetailView(DetailView):
+    model = Product
+    template_name = "shop/detail.html"
+    context_object_name = "product"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        product = self.get_object()
+        
+        context['cart_product_form'] = CartAddProductForm()
+        context['reviews'] = product.reviews.all().order_by('-created_at')
+        
+        # Verifica se l'utente può inserire una recensione
+        can_review = False
+        already_reviewed = False
+        if self.request.user.is_authenticated:
+            has_purchased = OrderItem.objects.filter(order__user=self.request.user, product=product).exists()
+            already_reviewed = Review.objects.filter(product=product, user=self.request.user).exists()
+            can_review = has_purchased and not already_reviewed
+            
+        context['can_review'] = can_review
+        context['already_reviewed'] = already_reviewed
+        context['review_form'] = ReviewForm()
+        
+        return context
 
 @login_required
 def add_review(request, product_id):
@@ -112,28 +137,38 @@ def add_review(request, product_id):
             review.product = product
             review.user = request.user
             review.save()
+            messages.success(request, f"La tua recensione per {product.name} è stata pubblicata!")
+        else:
+            messages.error(request, "Errore durante il salvataggio della recensione.")
             
     return redirect('shop:product_detail', pk=product.id)
 
+
+# ==========================================
+# 2. CART
+# ==========================================
+
+@require_POST
 def cart_add(request, product_id):
-    if request.method == 'POST':
-        cart = Cart(request)
-        product = get_object_or_404(Product, id=product_id)
-        form = CartAddProductForm(request.POST)
-        if form.is_valid():
-            cd = form.cleaned_data
-            cart.add(
-                product=product,
-                quantity=cd['quantity'],
-                override_quantity=cd['override']
-            )
+    cart = Cart(request)
+    product = get_object_or_404(Product, id=product_id)
+    form = CartAddProductForm(request.POST)
+    if form.is_valid():
+        cd = form.cleaned_data
+        cart.add(
+            product=product,
+            quantity=cd['quantity'],
+            override_quantity=cd['override']
+        )
+        messages.success(request, f"{product.name} aggiunto al carrello!")
     return redirect('shop:cart_detail')
 
+@require_POST
 def cart_remove(request, product_id):
-    if request.method == 'POST':
-        cart = Cart(request)
-        product = get_object_or_404(Product, id=product_id)
-        cart.remove(product)
+    cart = Cart(request)
+    product = get_object_or_404(Product, id=product_id)
+    cart.remove(product)
+    messages.success(request, f"{product.name} rimosso dal carrello.")
     return redirect('shop:cart_detail')
 
 def cart_detail(request):
@@ -146,6 +181,10 @@ def cart_detail(request):
     return render(request, 'shop/cart_detail.html', {'cart': cart})
 
 
+# ==========================================
+# 3. CHECKOUT & ORDERS
+# ==========================================
+
 @login_required
 def checkout(request):
     cart = Cart(request)
@@ -157,8 +196,17 @@ def checkout(request):
     if request.method == 'POST':
         form = OrderCreateForm(request.POST)
         if form.is_valid():
-            # Salva o aggiorna quelli inseriti
+            # Salva o aggiorna quelli inseriti nel profilo utente
             user_updated = False
+            if form.cleaned_data['first_name'] and user.first_name != form.cleaned_data['first_name']:
+                user.first_name = form.cleaned_data['first_name']
+                user_updated = True
+            if form.cleaned_data['last_name'] and user.last_name != form.cleaned_data['last_name']:
+                user.last_name = form.cleaned_data['last_name']
+                user_updated = True
+            if form.cleaned_data['email'] and user.email != form.cleaned_data['email']:
+                user.email = form.cleaned_data['email']
+                user_updated = True
             if form.cleaned_data['indirizzo'] and user.indirizzo != form.cleaned_data['indirizzo']:
                 user.indirizzo = form.cleaned_data['indirizzo']
                 user_updated = True
@@ -190,12 +238,19 @@ def checkout(request):
                     price=price,
                     quantity=quantity
                 )
+                # Decrementa lo stock del prodotto
+                product.stock -= quantity
+                product.save()
             
             cart.clear()
+            messages.success(request, "Ordine completato con successo!")
             return redirect('shop:order_created', order_id=order.id)
     else:
         # In caso contrario crea il form precompilato con i dati dell'utente
         initial_data = {
+            'first_name': user.first_name,
+            'last_name': user.last_name,
+            'email': user.email,
             'indirizzo': user.indirizzo,
             'citta': user.citta,
             'codice_postale': user.codice_postale,
@@ -208,162 +263,36 @@ def checkout(request):
         'form': form
     })
 
+class OrderCreatedView(LoginRequiredMixin, DetailView):
+    model = Order
+    template_name = 'shop/order_created.html'
+    context_object_name = 'order'
+    pk_url_kwarg = 'order_id'
 
-@login_required
-def order_created(request, order_id):
-    order = get_object_or_404(Order, id=order_id, user=request.user)
-    return render(request, 'shop/order_created.html', {'order': order})
+    def get_queryset(self):
+        return Order.objects.filter(user=self.request.user)
+
+class OrderListView(LoginRequiredMixin, ListView):
+    model = Order
+    template_name = 'shop/order_list.html'
+    context_object_name = 'orders'
+
+    def get_queryset(self):
+        return Order.objects.filter(user=self.request.user)
+
+class OrderDetailView(LoginRequiredMixin, DetailView):
+    model = Order
+    template_name = 'shop/order_detail.html'
+    context_object_name = 'order'
+    pk_url_kwarg = 'order_id'
+
+    def get_queryset(self):
+        return Order.objects.filter(user=self.request.user)
 
 
-@login_required
-def order_list(request):
-    orders = Order.objects.filter(user=request.user)
-    return render(request, 'shop/order_list.html', {'orders': orders})
-
-
-@login_required
-def order_detail(request, order_id):
-    order = get_object_or_404(Order, id=order_id, user=request.user)
-    return render(request, 'shop/order_detail.html', {'order': order})
-
-
-from django.core.exceptions import PermissionDenied
-from django.contrib.auth.decorators import login_required
-from functools import wraps
-
-# Queste due funzioni (fatte da IA), mi permettono di controllare i permessi in modo semplice.
-# Sennò avrei usato degli if all'interno delle funzioni
-
-def manager_required(view_func):
-    @wraps(view_func)
-    @login_required
-    def _wrapped_view(request, *args, **kwargs):
-        if not (request.user.is_staff or request.user.groups.filter(name='Store Manager').exists()):
-            raise PermissionDenied("Accesso negato. Questa sezione è riservata ai manager.")
-        return view_func(request, *args, **kwargs)
-    return _wrapped_view
-
-@manager_required
-def manager_dashboard(request):
-    if request.user.is_superuser:
-        return redirect('admin:index')
-    products = Product.objects.all()
-    categories = Category.objects.all()
-    orders = Order.objects.all().order_by('-created')
-    sales = OrderItem.objects.all().order_by('-order__created')
-    reviews = Review.objects.all().order_by('-created_at')
-    
-    # Calculate metrics for the manager/admin
-    total_sales_count = orders.count()
-    
-    # Total revenue/earnings
-    total_earnings = sum(item.price * item.quantity for item in sales)
-    
-    # Total customers (users that are not staff and not managers)
-    from django.contrib.auth import get_user_model
-    User = get_user_model()
-    total_customers = User.objects.filter(is_staff=False).exclude(groups__name='Store Manager').count()
-    
-    return render(request, 'shop/manager_dashboard.html', {
-        'products': products,
-        'categories': categories,
-        'orders': orders,
-        'sales': sales,
-        'reviews': reviews,
-        'total_sales_count': total_sales_count,
-        'total_earnings': total_earnings,
-        'total_customers': total_customers,
-    })
-
-# --- Prodotti ---
-@manager_required
-def product_create(request):
-    if request.method == 'POST':
-        form = ProductForm(request.POST, request.FILES)
-        if form.is_valid():
-            product = form.save(commit=False)
-            product.save()
-            form.save_m2m()
-            return redirect('shop:manager_dashboard')
-    else:
-        form = ProductForm()
-    return render(request, 'shop/entity_form.html', {'form': form, 'entity_title': 'Prodotto'})
-
-@manager_required
-def product_update(request, pk):
-    product = get_object_or_404(Product, pk=pk)
-    
-    if request.method == 'POST':
-        form = ProductForm(request.POST, request.FILES, instance=product)
-        if form.is_valid():
-            form.save()
-            return redirect('shop:manager_dashboard')
-    else:
-        form = ProductForm(instance=product)
-    return render(request, 'shop/entity_form.html', {'form': form, 'entity_title': 'Prodotto'})
-
-@manager_required
-def product_delete(request, pk):
-    product = get_object_or_404(Product, pk=pk)
-    product.delete()
-    return redirect('shop:manager_dashboard')
-
-@manager_required
-def review_delete(request, pk):
-    review = get_object_or_404(Review, pk=pk)
-    review.delete()
-    return redirect('shop:manager_dashboard')
-
-# --- Categorie ---
-@manager_required
-def category_create(request):
-    if request.method == 'POST':
-        form = CategoryForm(request.POST)
-        if form.is_valid():
-            form.save()
-            return redirect('shop:manager_dashboard')
-    else:
-        form = CategoryForm()
-    return render(request, 'shop/entity_form.html', {'form': form, 'entity_title': 'Categoria'})
-
-@manager_required
-def category_update(request, pk):
-    category = get_object_or_404(Category, pk=pk)
-    if request.method == 'POST':
-        form = CategoryForm(request.POST, instance=category)
-        if form.is_valid():
-            form.save()
-            return redirect('shop:manager_dashboard')
-    else:
-        form = CategoryForm(instance=category)
-    return render(request, 'shop/entity_form.html', {'form': form, 'entity_title': 'Categoria'})
-
-@manager_required
-def category_delete(request, pk):
-    category = get_object_or_404(Category, pk=pk)
-    category.delete()
-    return redirect('shop:manager_dashboard')
-
-# --- Ordini ---
-@manager_required
-def order_update(request, pk):
-    order = get_object_or_404(Order, pk=pk)
-    if request.method == 'POST':
-        form = OrderEditForm(request.POST, instance=order)
-        if form.is_valid():
-            form.save()
-            return redirect('shop:manager_dashboard')
-    else:
-        form = OrderEditForm(instance=order)
-    return render(request, 'shop/entity_form.html', {'form': form, 'entity_title': 'Ordine'})
-
-@manager_required
-def order_delete(request, pk):
-    order = get_object_or_404(Order, pk=pk)
-    order.delete()
-    return redirect('shop:manager_dashboard')
-
-# --- PC Builder (Assemblatore PC) ---
+# ==========================================
+# 4. PC BUILDER (Assemblatore PC)
+# ==========================================
 
 def pc_builder_step(request, step=1):
     categories_order = [
@@ -480,7 +409,7 @@ def pc_builder_step(request, step=1):
         if p_id:
             prod = Product.objects.filter(id=p_id).first()
             if prod:
-                total_price += prod.price
+                total_price += prod.current_price
         steps_data.append({
             'number': i,
             'name': cat_name,
@@ -524,7 +453,7 @@ def pc_builder_summary(request):
             prod = Product.objects.filter(id=p_id).first()
             if prod:
                 selected_components.append(prod)
-                total_price += prod.price
+                total_price += prod.current_price
             else:
                 missing_components = True
         else:
@@ -561,3 +490,158 @@ def pc_builder_clear(request):
             del request.session[key]
     request.session.modified = True
     return redirect('shop:pc_builder_step', step=1)
+
+
+# ==========================================
+# 5. MANAGER DASHBOARD & MIXINS
+# ==========================================
+
+class ManagerDashboardView(LoginRequiredMixin, PermissionRequiredMixin, TemplateView):
+    template_name = 'shop/manager_dashboard.html'
+    permission_required = 'shop.view_product'
+    
+    def handle_no_permission(self):
+        if not self.request.user.is_authenticated:
+            return super().handle_no_permission()
+        raise PermissionDenied("Non sei autorizzato ad accedere alla dashboard.")
+
+    def dispatch(self, request, *args, **kwargs):
+        if request.user.is_authenticated and request.user.is_superuser:
+            return redirect('admin:index')
+        return super().dispatch(request, *args, **kwargs)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        
+        context['products'] = Product.objects.all()
+        context['categories'] = Category.objects.all()
+        
+        orders = Order.objects.all().order_by('-created')
+        context['orders'] = orders
+        
+        sales = OrderItem.objects.all().order_by('-order__created')
+        context['sales'] = sales
+        
+        context['reviews'] = Review.objects.all().order_by('-created_at')
+        
+        context['total_sales_count'] = orders.count()
+        context['total_earnings'] = sum(item.price * item.quantity for item in sales)
+        
+        from django.contrib.auth import get_user_model
+        User = get_user_model()
+        context['total_customers'] = User.objects.filter(is_staff=False).exclude(groups__name='Store Manager').count()
+        
+        return context
+
+class ManagerFormMixin(LoginRequiredMixin, PermissionRequiredMixin):
+    """Mixin comune per le viste Create/Update del Manager.
+    Gestisce: login, permessi, template, redirect e titolo entità."""
+    template_name = 'shop/entity_form.html'
+    success_url = reverse_lazy('shop:manager_dashboard')
+    entity_title = ''
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['entity_title'] = self.entity_title
+        return context
+
+class ManagerDeleteMixin(LoginRequiredMixin, PermissionRequiredMixin):
+    """Mixin comune per le viste Delete del Manager.
+    Gestisce: login, permessi, redirect e accetta solo POST."""
+    success_url = reverse_lazy('shop:manager_dashboard')
+    http_method_names = ['post']
+
+
+# ==========================================
+# 6. MANAGER CRUD (Prodotti, Categorie, Ordini)
+# ==========================================
+
+# --- Prodotti ---
+class ProductCreateView(ManagerFormMixin, CreateView):
+    model = Product
+    form_class = ProductForm
+    permission_required = 'shop.add_product'
+    entity_title = 'Prodotto'
+
+    def form_valid(self, form):
+        response = super().form_valid(form)
+        messages.success(self.request, f"Prodotto {self.object.name} creato con successo.")
+        return response
+
+class ProductUpdateView(ManagerFormMixin, UpdateView):
+    model = Product
+    form_class = ProductForm
+    permission_required = 'shop.change_product'
+    entity_title = 'Prodotto'
+
+    def form_valid(self, form):
+        response = super().form_valid(form)
+        messages.success(self.request, f"Prodotto {self.object.name} aggiornato con successo.")
+        return response
+
+class ProductDeleteView(ManagerDeleteMixin, DeleteView):
+    model = Product
+    permission_required = 'shop.delete_product'
+
+    def form_valid(self, form):
+        messages.success(self.request, f"Prodotto {self.object.name} eliminato.")
+        return super().form_valid(form)
+
+class ReviewDeleteView(ManagerDeleteMixin, DeleteView):
+    model = Review
+    permission_required = 'shop.delete_review'
+
+    def form_valid(self, form):
+        messages.success(self.request, "Recensione eliminata con successo.")
+        return super().form_valid(form)
+
+# --- Categorie ---
+class CategoryCreateView(ManagerFormMixin, CreateView):
+    model = Category
+    form_class = CategoryForm
+    permission_required = 'shop.add_category'
+    entity_title = 'Categoria'
+
+    def form_valid(self, form):
+        response = super().form_valid(form)
+        messages.success(self.request, f"Categoria {self.object.name} creata.")
+        return response
+
+class CategoryUpdateView(ManagerFormMixin, UpdateView):
+    model = Category
+    form_class = CategoryForm
+    permission_required = 'shop.change_category'
+    entity_title = 'Categoria'
+
+    def form_valid(self, form):
+        response = super().form_valid(form)
+        messages.success(self.request, f"Categoria {self.object.name} aggiornata.")
+        return response
+
+class CategoryDeleteView(ManagerDeleteMixin, DeleteView):
+    model = Category
+    permission_required = 'shop.delete_category'
+
+    def form_valid(self, form):
+        messages.success(self.request, f"Categoria {self.object.name} eliminata.")
+        return super().form_valid(form)
+
+# --- Ordini ---
+class OrderUpdateView(ManagerFormMixin, UpdateView):
+    model = Order
+    form_class = OrderEditForm
+    permission_required = 'shop.change_order'
+    entity_title = 'Ordine'
+
+    def form_valid(self, form):
+        response = super().form_valid(form)
+        messages.success(self.request, f"Stato dell'ordine #{self.object.id} aggiornato.")
+        return response
+
+class OrderDeleteView(ManagerDeleteMixin, DeleteView):
+    model = Order
+    permission_required = 'shop.delete_order'
+
+    def form_valid(self, form):
+        messages.success(self.request, f"Ordine #{self.object.id} eliminato.")
+        return super().form_valid(form)

@@ -61,7 +61,7 @@
 </div>
 
 <div class="featured-section">
-    <h2 class="section-title text-center componenti-popolari">I PIÙ VENDUTI</h2>
+    <h2 class="section-title text-center componenti-popolari">NUOVI ARRIVI</h2>
     
     {% if products %}
         <div class="product-grid-3">
@@ -77,7 +77,14 @@
                     <div class="card-content">
                         <h3 class="card-title">{{ product.name }}</h3>
                         <div class="card-bottom">
-                            <span class="card-price">€{{ product.price }}</span>
+                            {% if product.discount_price %}
+                                <div>
+                                    <span class="card-price-original">€{{ product.price }}</span>
+                                    <span class="card-price-discount">€{{ product.discount_price }}</span>
+                                </div>
+                            {% else %}
+                                <span class="card-price">€{{ product.price }}</span>
+                            {% endif %}
                         </div>
                     </div>
                 </a>
@@ -96,7 +103,7 @@
     </div>
     <div class="banner-content">
         <h2 class="banner-title">ESPERIENZA E PROFESSIONALITÀ</h2>
-        <p class="banner-text"> Al giorno d'oggi ci sono milioni di componenti hwardware in commercio di bassa qualità, venduti da fornitori che non si preoccupano della qualità dei prodotti, ma solo dei profitti. Noi siamo diversi: anche se i prezzi sono un po' più alti, questi coprono la nostra esperienza nel settore e la nostra professionalità nella scelta dei pezzi. Per questo i clienti sono sempre soddisfatti</p>.</p>
+        <p class="banner-text"> Al giorno d'oggi ci sono milioni di componenti hwardware in commercio di bassa qualità, venduti da fornitori che non si preoccupano della qualità dei prodotti, ma solo dei profitti. Noi siamo diversi: anche se i prezzi sono un po' più alti, questi coprono la nostra esperienza nel settore e la nostra professionalità nella scelta dei pezzi. Per questo i clienti sono sempre soddisfatti.</p>
         <p class="banner-text">Ogni componente hardware acquistato sul nostro store è coperto da supporto tecnico diretto per l'installazione e una garanzia di compatibilità certificata dai nostri esperti.</p>
     </div>
 </div>
