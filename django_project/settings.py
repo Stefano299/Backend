@@ -32,12 +32,17 @@ if os.environ.get('ALLOWED_HOSTS'):
 railway_static_url = os.environ.get('RAILWAY_STATIC_URL')
 if railway_static_url:
     ALLOWED_HOSTS.append(railway_static_url)
+render_external_hostname = os.environ.get('RENDER_EXTERNAL_HOSTNAME')
+if render_external_hostname:
+    ALLOWED_HOSTS.append(render_external_hostname)
 
 CSRF_TRUSTED_ORIGINS = ['https://djangorailway-production.up.railway.app']
 if os.environ.get('CSRF_TRUSTED_ORIGINS'):
     CSRF_TRUSTED_ORIGINS.extend(os.environ.get('CSRF_TRUSTED_ORIGINS').split(','))
 if railway_static_url:
     CSRF_TRUSTED_ORIGINS.append(f"https://{railway_static_url}")
+if render_external_hostname:
+    CSRF_TRUSTED_ORIGINS.append(f"https://{render_external_hostname}")
 
 
 # Application definition
