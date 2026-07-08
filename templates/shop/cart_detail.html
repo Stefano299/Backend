@@ -53,10 +53,29 @@
                 <span>Articoli:</span>
                 <span>{{ cart.get_total_items }}</span>
             </div>
+            <div class="summary-row">
+                <span>Subtotale:</span>
+                <span>€{{ cart.get_subtotal }}</span>
+            </div>
+            {% if cart.get_discount %}
+                <div class="summary-row discount">
+                    <span>Sconto ({{ cart.get_discount.code }}):</span>
+                    <span>-€{{ cart.get_discount.amount }}</span>
+                </div>
+            {% endif %}
             <div class="summary-row total">
                 <span>Totale:</span>
                 <span>€{{ cart.get_total_price }}</span>
             </div>
+            
+            {% if user.is_authenticated %}
+                <hr class="summary-divider">
+                <form action="{% url 'shop:discount_apply' %}" method="post" class="discount-form">
+                    {% csrf_token %}
+                    {{ discount_form.code }}
+                    <button type="submit" class="btn-primary btn-discount">Applica Sconto</button>
+                </form>
+            {% endif %}
             
             {% if user.is_authenticated %}
                 <a href="{% url 'shop:checkout' %}" class="btn-checkout">Procedi al Pagamento</a>

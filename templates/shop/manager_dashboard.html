@@ -92,7 +92,7 @@
     </details>
 
     <!-- SEZIONE PRODOTTI -->
-    <details open class="dashboard-section">
+    <details class="dashboard-section">
         <summary class="section-header">
             <h2>Gestione Prodotti</h2>
             <div class="section-header-actions">
@@ -159,7 +159,7 @@
 
     <!-- SEZIONE CATEGORIE -->
     {% if user.is_staff or perms.shop.add_category %}
-    <details open class="dashboard-section">
+    <details class="dashboard-section">
         <summary class="section-header">
             <h2>Gestione Categorie</h2>
             <div class="section-header-actions">
@@ -201,9 +201,55 @@
     </details>
     {% endif %}
 
+    <!-- SEZIONE CODICI SCONTO -->
+    {% if user.is_staff or perms.shop.add_discountcode %}
+    <details class="dashboard-section">
+        <summary class="section-header">
+            <h2>Gestione Codici Sconto</h2>
+            <div class="section-header-actions">
+                <input type="text" placeholder="Cerca codice..." data-js="search-table" data-search-table="discounts-table" class="form-input">
+                <a href="{% url 'shop:discount_create' %}" data-js="add-button" class="btn-dashboard btn-add">+ Aggiungi Sconto</a>
+            </div>
+        </summary>
+        
+        <div class="table-container">
+            <table class="dashboard-table" id="discounts-table">
+                <thead>
+                    <tr>
+                        <th class="col-width-100">ID</th>
+                        <th>Codice</th>
+                        <th>Importo Sconto</th>
+                        <th class="col-width-180">Azioni</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for discount in discounts %}
+                        <tr>
+                            <td>#{{ discount.id }}</td>
+                            <td><strong>{{ discount.code }}</strong></td>
+                            <td>€{{ discount.amount }}</td>
+                            <td class="actions">
+                                <a href="{% url 'shop:discount_update' discount.id %}" class="btn-dashboard btn-edit">Modifica</a>
+                                <form action="{% url 'shop:discount_delete' discount.id %}" method="post" class="inline-form">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn-dashboard btn-delete" onclick="return confirm('Eliminare il codice sconto {{ discount.code }}?')">Elimina</button>
+                                </form>
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="4" class="empty-table-msg">Nessun codice sconto creato.</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </details>
+    {% endif %}
+
     <!-- SEZIONE ORDINI -->
     {% if user.is_staff or perms.shop.add_category %}
-    <details open class="dashboard-section">
+    <details class="dashboard-section">
         <summary class="section-header">
             <h2>Gestione Ordini</h2>
             <div class="section-header-actions">
@@ -255,7 +301,7 @@
     {% endif %}
 
     <!-- SEZIONE RECENSIONI -->
-    <details open class="dashboard-section">
+    <details class="dashboard-section">
         <summary class="section-header">
             <h2>Gestione Recensioni</h2>
             <div class="section-header-actions">

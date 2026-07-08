@@ -1,5 +1,5 @@
 from django import forms
-from .models import Product, Category, Order, Review
+from .models import Product, Category, Order, Review, DiscountCode
 
 class CustomClearableFileInput(forms.ClearableFileInput):
     template_name = 'shop/widgets/custom_clearable_file_input.html'
@@ -89,3 +89,14 @@ class ReviewForm(forms.ModelForm):
         }
 
 
+class DiscountApplyForm(forms.Form):
+    code = forms.CharField(label="Codice Sconto", widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Inserisci il codice...'}))
+
+class DiscountCodeForm(forms.ModelForm):
+    class Meta:
+        model = DiscountCode
+        fields = ['code', 'amount']
+        widgets = {
+            'code': forms.TextInput(attrs={'class': 'form-control'}),
+            'amount': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}),
+        }

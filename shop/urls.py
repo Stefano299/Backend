@@ -10,6 +10,7 @@ urlpatterns = [
     path("cart/", views.cart_detail, name="cart_detail"),
     path("cart/add/<int:product_id>/", views.cart_add, name="cart_add"),
     path("cart/remove/<int:product_id>/", views.cart_remove, name="cart_remove"),
+    path("cart/discount/", views.discount_apply, name="discount_apply"),
     path("checkout/", views.checkout, name="checkout"),
     path("checkout/success/<int:order_id>/", views.OrderCreatedView.as_view(), name="order_created"),
     path("orders/", views.OrderListView.as_view(), name="order_list"),
@@ -33,6 +34,11 @@ urlpatterns = [
     path("dashboard/order/<int:pk>/edit/", views.OrderUpdateView.as_view(), name="order_update"),
     path("dashboard/order/<int:pk>/delete/", views.OrderDeleteView.as_view(), name="order_delete"),
     path("dashboard/review/<int:pk>/delete/", views.ReviewDeleteView.as_view(), name="review_delete"),
+    
+    # Codici Sconto
+    path("dashboard/discount/add/", views.DiscountCodeCreateView.as_view(), name="discount_create"),
+    path("dashboard/discount/<int:pk>/edit/", views.DiscountCodeUpdateView.as_view(), name="discount_update"),
+    path("dashboard/discount/<int:pk>/delete/", views.DiscountCodeDeleteView.as_view(), name="discount_delete"),
     
     # PC Building
     path("builder/step/<int:step>/", views.pc_builder_step, name="pc_builder_step"),

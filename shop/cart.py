@@ -1,5 +1,5 @@
 from decimal import Decimal
-from .models import Product
+from .models import Product, DiscountCode
 
 # Il carrello è un dizionario indicizzato sull'id dei prodotti che contiene la quantità e il prezzo
 # I prodotti vengono presi dal db quando si itera dal carrello
@@ -38,10 +38,30 @@ class Cart:
     def clear(self):
         if 'cart' in self.session:
             del self.session['cart']
-            self.save()
+        if 'discount_id' in self.session:
+            del self.session['discount_id']
+        self.save()
+
+    def get_subtotal(self):
+        return sum(item['total_price'] for item in self)
+        
+    def get_discount(self):
+        discount_id = self.session.get('discount_id')
+        if discount_id:
+            discount = DiscountCode.objects.filter(id=discount_id).first()
+            if discount:
+                return discount
+            else:
+                self.session['discount_id'] = None
+                self.save()
+        return None
 
     def get_total_price(self):
-        return sum(item['total_price'] for item in self)
+        subtotal = self.get_subtotal()
+        discount = self.get_discount()
+        if discount:
+            return max(Decimal('0'), subtotal - discount.amount)
+        return subtotal
 
     def get_total_items(self):
         return sum(item['quantity'] for item in self)

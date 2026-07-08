@@ -274,3 +274,19 @@
         flex-grow: 1;
     }
 }
+
+.summary-divider {
+    border: 0;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    margin: 15px 0;
+}
+
+.discount-form {
+    margin-bottom: 20px;
+}
+
+.btn-discount {
+    margin-top: 10px;
+    width: 100%;
+}
+

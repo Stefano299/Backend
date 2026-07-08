@@ -8,9 +8,9 @@ from django.http import Http404
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
 from django.views.generic import CreateView, UpdateView, DeleteView, ListView, DetailView, TemplateView
-from .models import Product, Category, Order, OrderItem, Review
+from .models import Product, Category, Order, OrderItem, Review, DiscountCode
 from .cart import Cart
-from .forms import CartAddProductForm, OrderCreateForm, ProductForm, CategoryForm, OrderEditForm, ReviewForm
+from .forms import CartAddProductForm, OrderCreateForm, ProductForm, CategoryForm, OrderEditForm, ReviewForm, DiscountCodeForm, DiscountApplyForm
 
 
 # ==========================================
@@ -180,7 +180,32 @@ def cart_detail(request):
             'quantity': item['quantity'],
             'override': True
         })
-    return render(request, 'shop/cart_detail.html', {'cart': cart})
+    discount_form = DiscountApplyForm()
+    return render(request, 'shop/cart_detail.html', {'cart': cart, 'discount_form': discount_form})
+
+@require_POST
+@login_required
+def discount_apply(request):
+    cart = Cart(request)
+    form = DiscountApplyForm(request.POST)
+    if form.is_valid():
+        code = form.cleaned_data['code']
+        discount = DiscountCode.objects.filter(code__iexact=code).first()
+        
+        if discount:
+            # Controllo se lo user ha già usato questo codice sconto in passato
+            if Order.objects.filter(user=request.user, discount_code=discount).exists():
+                messages.error(request, f"Il codice sconto {code} è già stato utilizzato.")
+            else:
+                request.session['discount_id'] = discount.id
+                cart.save()
+                messages.success(request, f"Codice sconto {code} applicato con successo!")
+        else:
+            request.session['discount_id'] = None
+            cart.save()
+            messages.error(request, f"Codice sconto non valido.")
+    return redirect('shop:cart_detail')
+
 
 
 # ==========================================
@@ -227,6 +252,10 @@ def checkout(request):
             # Crea un ordine
             order = form.save(commit=False)
             order.user = user
+            discount = cart.get_discount()
+            if discount:
+                order.discount_code = discount
+                order.discount_amount = discount.amount
             order.save()
             
             for item in cart:
@@ -524,6 +553,8 @@ class ManagerDashboardView(LoginRequiredMixin, PermissionRequiredMixin, Template
         sales = OrderItem.objects.all().order_by('-order__created')
         context['sales'] = sales
         
+        context['discounts'] = DiscountCode.objects.all()
+        
         context['reviews'] = Review.objects.all().order_by('-created_at')
         
         context['total_sales_count'] = orders.count()
@@ -646,4 +677,34 @@ class OrderDeleteView(ManagerDeleteMixin, DeleteView):
 
     def form_valid(self, form):
         messages.success(self.request, f"Ordine #{self.object.id} eliminato.")
+        return super().form_valid(form)
+
+class DiscountCodeCreateView(ManagerFormMixin, CreateView):
+    model = DiscountCode
+    form_class = DiscountCodeForm
+    permission_required = 'shop.add_discountcode'
+    entity_title = 'Codice Sconto'
+    
+    def form_valid(self, form):
+        response = super().form_valid(form)
+        messages.success(self.request, f"Codice Sconto '{self.object.code}' creato con successo.")
+        return response
+
+class DiscountCodeUpdateView(ManagerFormMixin, UpdateView):
+    model = DiscountCode
+    form_class = DiscountCodeForm
+    permission_required = 'shop.change_discountcode'
+    entity_title = 'Codice Sconto'
+    
+    def form_valid(self, form):
+        response = super().form_valid(form)
+        messages.success(self.request, f"Codice Sconto '{self.object.code}' aggiornato con successo.")
+        return response
+
+class DiscountCodeDeleteView(ManagerDeleteMixin, DeleteView):
+    model = DiscountCode
+    permission_required = 'shop.delete_discountcode'
+    
+    def form_valid(self, form):
+        messages.success(self.request, f"Codice Sconto '{self.object.code}' eliminato con successo.")
         return super().form_valid(form)

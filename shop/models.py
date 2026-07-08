@@ -65,6 +65,13 @@ class Product(models.Model):
         return []
 
 
+class DiscountCode(models.Model):
+    code = models.CharField(max_length=50, unique=True, verbose_name="Codice Sconto")
+    amount = models.DecimalField(max_digits=10, decimal_places=2, validators=[MinValueValidator(0)], verbose_name="Importo Sconto")
+    
+    def __str__(self):
+        return self.code
+
 class Order(models.Model):
     SHIPPING_STATUS_CHOICES = [
         ('ricevuto', 'Ordine ricevuto'),
@@ -101,6 +108,9 @@ class Order(models.Model):
         default='ricevuto',
         verbose_name="Stato Spedizione"
     )
+    discount_code = models.ForeignKey(DiscountCode, on_delete=models.SET_NULL, blank=True, null=True, related_name='orders')
+    discount_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0, verbose_name="Importo Sconto Applicato")
+
 
     # Voglio vengano mostrati in ordine decrescente per data di creazione
     class Meta:
@@ -110,7 +120,9 @@ class Order(models.Model):
         return f"Ordine {self.id} - {self.user.username}"
 
     def get_total_cost(self):
-        return sum(item.get_cost() for item in self.items.all())
+        total = sum(item.get_cost() for item in self.items.all())
+        return max(0, total - self.discount_amount)
+
 
     # Serve alla barra di avanzamento della spedizione mostrata nel frontend
     def return_order_number(self):
