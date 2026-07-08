@@ -29,10 +29,15 @@ DEBUG = os.environ.get('DJANGO_DEBUG', '') != 'False'
 ALLOWED_HOSTS = ["djangorailway-production.up.railway.app", "127.0.0.1", "localhost"]
 if os.environ.get('ALLOWED_HOSTS'):
     ALLOWED_HOSTS.extend(os.environ.get('ALLOWED_HOSTS').split(','))
+railway_static_url = os.environ.get('RAILWAY_STATIC_URL')
+if railway_static_url:
+    ALLOWED_HOSTS.append(railway_static_url)
 
 CSRF_TRUSTED_ORIGINS = ['https://djangorailway-production.up.railway.app']
 if os.environ.get('CSRF_TRUSTED_ORIGINS'):
     CSRF_TRUSTED_ORIGINS.extend(os.environ.get('CSRF_TRUSTED_ORIGINS').split(','))
+if railway_static_url:
+    CSRF_TRUSTED_ORIGINS.append(f"https://{railway_static_url}")
 
 
 # Application definition
