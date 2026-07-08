@@ -263,6 +263,7 @@ body.nav-open {
         padding: 0.6rem;
         box-sizing: border-box;
         margin-top: 0.5rem;
+        border: 1px solid #f59e0b;
     }
 }
 
