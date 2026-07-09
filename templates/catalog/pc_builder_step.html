@@ -109,7 +109,7 @@
                 </div>
                 <div class="sidebar-actions">
                     {% if step > 1 %}
-                        <a href="{% url 'catalog:pc_builder_step' step|add:"-1" %}" class="btn-sidebar-outline">⬅ Indietro</a>
+                        <a href="{% url 'catalog:pc_builder_step' step|add:"-1" %}" class="btn-sidebar-outline">Indietro</a>
                     {% endif %}
                     <a href="{% url 'catalog:pc_builder_summary' %}" class="btn-sidebar-primary">Vedi Riepilogo</a>
                     <a href="{% url 'catalog:pc_builder_clear' %}" data-js="clear-build" class="btn-sidebar-outline js-clear-build">Ricomincia</a>

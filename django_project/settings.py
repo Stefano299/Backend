@@ -54,6 +54,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django.forms',
     'pages.apps.PagesConfig',
     'dashboard.apps.DashboardConfig',
     'catalog.apps.CatalogConfig',
@@ -156,3 +157,6 @@ LOGOUT_REDIRECT_URL = 'home'
 
 # Custom User Model
 AUTH_USER_MODEL = 'accounts.CustomUser'
+
+# Form renderer to load widget templates from global templates directory
+FORM_RENDERER = 'django.forms.renderers.TemplatesSetting'

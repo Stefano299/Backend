@@ -27,7 +27,7 @@ def run():
     print("Creating Groups and Permissions...")
     manager_group, _ = Group.objects.get_or_create(name='Store Manager')
     
-    for model in [Product, Category, Order, DiscountCode]:
+    for model in [Product, Category, Review, Order, DiscountCode]:
         content_type = ContentType.objects.get_for_model(model)
         permissions = Permission.objects.filter(content_type=content_type)
         for perm in permissions:
