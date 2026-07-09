@@ -1,0 +1,155 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ product.name }} - PC Builder{% endblock %}
+
+{% block css %}
+    <link rel="stylesheet" href="{% static 'css/detail.css' %}?t={% now 'U' %}">
+{% endblock %}
+
+{% block content %}
+<div class="breadcrumb">
+    <a href="{% url 'catalog:product_list' %}" class="btn-back">
+        <svg class="back-arrow-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path d="M19 12H5M5 12L12 19M5 12L12 5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <span>Torna al Catalogo</span>
+    </a>
+</div>
+
+<div class="product-container">
+    <div class="product-gallery">
+        {% if product.image %}
+            <img src="{{ product.image.url }}?t={% now 'U' %}" alt="{{ product.name }}">
+        {% else %}
+            <div class="placeholder">Immagine non disponibile</div>
+        {% endif %}
+    </div>
+
+    <div class="product-info">
+        <h1 class="title">{{ product.name }}</h1>
+        
+        <div class="product-rating-summary">
+            {% if product.get_average_rating %}
+                <span class="rating-stars">
+                    {% for i in product.get_stars_filled %}
+                        <svg class="star-icon filled" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 .587l3.668 7.431 8.2 1.191-5.934 5.784 1.4 8.168L12 18.896l-7.334 3.854 1.4-8.168L.132 9.409l8.2-1.191z"/></svg>
+                    {% endfor %}
+                    {% for i in product.get_stars_empty %}
+                        <svg class="star-icon empty" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 .587l3.668 7.431 8.2 1.191-5.934 5.784 1.4 8.168L12 18.896l-7.334 3.854 1.4-8.168L.132 9.409l8.2-1.191z"/></svg>
+                    {% endfor %}
+                </span>
+            {% else %}
+                <span class="rating-no-reviews">Ancora nessuna recensione</span>
+            {% endif %}
+        </div>
+        
+        <div class="tags">
+            {% for cat in product.categories.all %}
+                <span class="tag">{{ cat.name }}</span>
+            {% endfor %}
+            
+            {% if product.stock > 0 %}
+                <span class="tag in-stock">Disponibile ({{ product.stock }})</span>
+            {% else %}
+                <span class="tag out-stock">Esaurito</span>
+            {% endif %}
+        </div>
+
+        <p class="description">{{ product.description|default:"Nessuna descrizione." }}</p>
+        
+        {% if product.discount_price %}
+            <div class="price-wrapper">
+                <span class="price-original">€{{ product.price }}</span>
+                <span class="price-discount">€{{ product.discount_price }}</span>
+            </div>
+        {% else %}
+            <div class="price">€{{ product.price }}</div>
+        {% endif %}
+
+        {% if product.stock > 0 %}
+            <form action="{% url 'orders:cart_add' product.id %}" method="post" class="add-to-cart">
+                {% csrf_token %}
+                <div class="quantity-control">
+                    <label>Quantità:</label>
+                    <div class="quantity-picker" data-js="quantity-picker">
+                        <button type="button" class="qty-btn" data-js="qty-minus">-</button>
+                        <input type="number" name="quantity" value="1" min="1" max="{{ product.stock }}" class="qty-input" data-js="qty-input" readonly>
+                        <button type="button" class="qty-btn" data-js="qty-plus">+</button>
+                    </div>
+                    {{ cart_product_form.override }}
+                </div>
+                <button type="submit" class="btn-add">Aggiungi al Carrello</button>
+            </form>
+        {% else %}
+            <button class="btn-disabled" disabled>Non Disponibile</button>
+        {% endif %}
+    </div>
+</div>
+
+<div class="reviews-section">
+    <h2 class="reviews-title">RECENSIONI</h2>
+    
+    <!-- Form per lasciare una recensione -->
+    {% if can_review %}
+        <div class="add-review-form">
+            <h3>Lascia una recensione</h3>
+            <form action="{% url 'catalog:add_review' product.id %}" method="post">
+                {% csrf_token %}
+                <div class="form-group">
+                    <div class="star-rating">
+                        <input type="radio" id="star5" name="rating" value="5" required />
+                        <label for="star5" title="5 stelle"></label>
+                        <input type="radio" id="star4" name="rating" value="4" />
+                        <label for="star4" title="4 stelle"></label>
+                        <input type="radio" id="star3" name="rating" value="3" />
+                        <label for="star3" title="3 stelle"></label>
+                        <input type="radio" id="star2" name="rating" value="2" />
+                        <label for="star2" title="2 stelle"></label>
+                        <input type="radio" id="star1" name="rating" value="1" />
+                        <label for="star1" title="1 stella"></label>
+                    </div>
+                </div>
+                <div class="form-group">
+                    {{ review_form.comment }}
+                </div>
+                <button type="submit" class="btn-add">Invia Recensione</button>
+            </form>
+        </div>
+    {% elif user.is_authenticated %}
+        {% if already_reviewed %}
+            <p class="review-status-msg">Hai già recensito questo prodotto.</p>
+        {% else %}
+            <p class="review-status-msg">Devi aver acquistato questo prodotto per poter lasciare una recensione.</p>
+        {% endif %}
+    {% else %}
+        <p class="review-status-msg">Accedi per lasciare una recensione.</p>
+    {% endif %}
+
+    <!-- Lista recensioni -->
+    <div class="reviews-list">
+        {% for review in reviews %}
+            <div class="review-item">
+                <div class="review-item-header">
+                    <span class="review-item-user">{{ review.user.username }}</span>
+                    <span class="review-item-rating">
+                        {% for i in "12345" %}
+                            {% if forloop.counter <= review.rating %}
+                                <svg class="star-icon filled" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 .587l3.668 7.431 8.2 1.191-5.934 5.784 1.4 8.168L12 18.896l-7.334 3.854 1.4-8.168L.132 9.409l8.2-1.191z"/></svg>
+                            {% else %}
+                                <svg class="star-icon empty" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 .587l3.668 7.431 8.2 1.191-5.934 5.784 1.4 8.168L12 18.896l-7.334 3.854 1.4-8.168L.132 9.409l8.2-1.191z"/></svg>
+                            {% endif %}
+                        {% endfor %}
+                    </span>
+                </div>
+                <p class="review-item-comment">{{ review.comment }}</p>
+                <div class="review-item-date">{{ review.created_at|date:"d M Y H:i" }}</div>
+            </div>
+        {% empty %}
+            <p class="review-status-msg">Nessuna recensione per questo prodotto.</p>
+        {% endfor %}
+    </div>
+</div>
+
+<script src="{% static 'js/quantity.js' %}"></script>
+{% endblock %}

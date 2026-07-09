@@ -1,0 +1,355 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Dashboard Manager - PC Builder{% endblock %}
+
+{% block css %}
+    <link rel="stylesheet" href="{% static 'css/dashboard.css' %}?v=1.2">
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+    <div class="dashboard-header">
+        <div>
+            <h1>Dashboard Manager</h1>
+            <p>Pannello di controllo del negozio. Monitora le vendite, gestisci i prodotti, le categorie e gli ordini dei clienti.</p>
+        </div>
+    </div>
+
+
+    <!--Sezione che mostra dati vendite, clienti ecc-->
+    <div class="dashboard-stats-grid">
+        <div class="stat-card">
+            <div class="stat-icon">
+                <img src="/media/dashboard/revenue.png" alt="Revenue Icon" class="stat-icon-img">
+            </div>
+            <div class="stat-info">
+                <span class="stat-label">Ricavi Totali</span>
+                <span class="stat-value">€{{ total_earnings }}</span>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon">
+                <img src="/media/dashboard/orders.png" alt="Orders Icon" class="stat-icon-img">
+            </div>
+            <div class="stat-info">
+                <span class="stat-label">Ordini Totali</span>
+                <span class="stat-value">{{ total_sales_count }}</span>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon">
+                <img src="/media/dashboard/clients.png" alt="Clients Icon" class="stat-icon-img">
+            </div>
+            <div class="stat-info">
+                <span class="stat-label">Clienti</span>
+                <span class="stat-value">{{ total_customers }}</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- History delle vendite -->
+    <details class="dashboard-section">
+        <summary class="section-header">
+            <h2>History delle Vendite</h2>
+            <div class="section-header-actions">
+                <input type="text" placeholder="Cerca vendite..." data-js="search-table" data-search-table="sales-table" class="form-input">
+            </div>
+        </summary>
+        
+        <div class="table-container">
+            <table class="dashboard-table" id="sales-table">
+                <thead>
+                    <tr>
+                        <th class="col-width-100">ID Ordine</th>
+                        <th>Prodotto</th>
+                        <th>Acquirente</th>
+                        <th>Quantità</th>
+                        <th>Prezzo Unitario</th>
+                        <th>Totale Ricavo</th>
+                        <th>Data Vendita</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for sale in sales %}
+                        <tr>
+                            <td><strong>#{{ sale.order.id }}</strong></td>
+                            <td>{{ sale.product.name }}</td>
+                            <td>{{ sale.order.user.username }}</td>
+                            <td>{{ sale.quantity }} pz</td>
+                            <td>€{{ sale.price }}</td>
+                            <td class="sale-revenue">€{{ sale.get_cost }}</td>
+                            <td>{{ sale.order.created|date:"d M Y H:i" }}</td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="7" class="empty-table-msg">Nessuna vendita registrata.</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </details>
+
+    <!-- SEZIONE PRODOTTI -->
+    <details class="dashboard-section">
+        <summary class="section-header">
+            <h2>Gestione Prodotti</h2>
+            <div class="section-header-actions">
+                <input type="text" placeholder="Cerca prodotto..." data-js="search-table" data-search-table="products-table" class="form-input">
+                <a href="{% url 'dashboard:product_create' %}" data-js="add-button" class="btn-dashboard btn-add">+ Aggiungi Prodotto</a>
+            </div>
+        </summary>
+        
+        <div class="table-container">
+            <table class="dashboard-table" id="products-table">
+                <thead>
+                    <tr>
+                        <th class="col-width-60">Foto</th>
+                        <th class="col-width-80">ID</th>
+                        <th>Nome</th>
+                        <th>Prezzo</th>
+                        <th>Stock</th>
+                        <th>Categorie</th>
+                        <th class="col-width-180">Azioni</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for product in products %}
+                        <tr>
+                            <td>
+                                {% if product.image %}
+                                    <img src="{{ product.image.url }}?t={% now 'U' %}" alt="{{ product.name }}" class="table-img">
+                                {% else %}
+                                    <div class="table-img table-img-placeholder">N/D</div>
+                                {% endif %}
+                            </td>
+                            <td>#{{ product.id }}</td>
+                            <td><strong>{{ product.name }}</strong></td>
+                            <td>€{{ product.price }}</td>
+                            <td>
+                                <span class="{% if product.stock == 0 %}stock-out{% endif %}">
+                                    {{ product.stock }} pz
+                                </span>
+                            </td>
+                            <td>
+                                {% for category in product.categories.all %}
+                                    <span class="category-tag">{{ category.name }}</span>
+                                {% empty %}
+                                    <span class="text-muted-italic">Nessuna</span>
+                                {% endfor %}
+                            </td>
+                            <td class="actions">
+                                <a href="{% url 'dashboard:product_update' product.id %}" class="btn-dashboard btn-edit">Modifica</a>
+                                <form action="{% url 'dashboard:product_delete' product.id %}" method="post" class="inline-form">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn-dashboard btn-delete" onclick="return confirm('Eliminare il prodotto {{ product.name }}?')">Elimina</button>
+                                </form>
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="7" class="empty-table-msg">Nessun prodotto presente nel catalogo.</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </details>
+
+    <!-- SEZIONE CATEGORIE -->
+    {% if user.is_staff or perms.catalog.add_category %}
+    <details class="dashboard-section">
+        <summary class="section-header">
+            <h2>Gestione Categorie</h2>
+            <div class="section-header-actions">
+                <input type="text" placeholder="Cerca categoria..." data-js="search-table" data-search-table="categories-table" class="form-input">
+                <a href="{% url 'dashboard:category_create' %}" data-js="add-button" class="btn-dashboard btn-add">+ Aggiungi Categoria</a>
+            </div>
+        </summary>
+        
+        <div class="table-container">
+            <table class="dashboard-table" id="categories-table">
+                <thead>
+                    <tr>
+                        <th class="col-width-100">ID</th>
+                        <th>Nome Categoria</th>
+                        <th class="col-width-180">Azioni</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for category in categories %}
+                        <tr>
+                            <td>#{{ category.id }}</td>
+                            <td><strong>{{ category.name }}</strong></td>
+                            <td class="actions">
+                                <a href="{% url 'dashboard:category_update' category.id %}" class="btn-dashboard btn-edit">Modifica</a>
+                                <form action="{% url 'dashboard:category_delete' category.id %}" method="post" class="inline-form">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn-dashboard btn-delete" onclick="return confirm('Eliminare la categoria {{ category.name }}?')">Elimina</button>
+                                </form>
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="3" class="empty-table-msg">Nessuna categoria creata.</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </details>
+    {% endif %}
+
+    <!-- SEZIONE CODICI SCONTO -->
+    {% if user.is_staff or perms.orders.add_discountcode %}
+    <details class="dashboard-section">
+        <summary class="section-header">
+            <h2>Gestione Codici Sconto</h2>
+            <div class="section-header-actions">
+                <input type="text" placeholder="Cerca codice..." data-js="search-table" data-search-table="discounts-table" class="form-input">
+                <a href="{% url 'dashboard:discount_create' %}" data-js="add-button" class="btn-dashboard btn-add">+ Aggiungi Sconto</a>
+            </div>
+        </summary>
+        
+        <div class="table-container">
+            <table class="dashboard-table" id="discounts-table">
+                <thead>
+                    <tr>
+                        <th class="col-width-100">ID</th>
+                        <th>Codice</th>
+                        <th>Importo Sconto</th>
+                        <th class="col-width-180">Azioni</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for discount in discounts %}
+                        <tr>
+                            <td>#{{ discount.id }}</td>
+                            <td><strong>{{ discount.code }}</strong></td>
+                            <td>€{{ discount.amount }}</td>
+                            <td class="actions">
+                                <a href="{% url 'dashboard:discount_update' discount.id %}" class="btn-dashboard btn-edit">Modifica</a>
+                                <form action="{% url 'dashboard:discount_delete' discount.id %}" method="post" class="inline-form">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn-dashboard btn-delete" onclick="return confirm('Eliminare il codice sconto {{ discount.code }}?')">Elimina</button>
+                                </form>
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="4" class="empty-table-msg">Nessun codice sconto creato.</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </details>
+    {% endif %}
+
+    <!-- SEZIONE ORDINI -->
+    {% if user.is_staff or perms.catalog.add_category %}
+    <details class="dashboard-section">
+        <summary class="section-header">
+            <h2>Gestione Ordini</h2>
+            <div class="section-header-actions">
+                <input type="text" placeholder="Cerca ordini..." data-js="search-table" data-search-table="orders-table" class="form-input">
+            </div>
+        </summary>
+        
+        <div class="table-container">
+            <table class="dashboard-table" id="orders-table">
+                <thead>
+                    <tr>
+                        <th class="col-width-100">ID Ordine</th>
+                        <th>Cliente</th>
+                        <th>Data</th>
+                        <th>Stato Spedizione</th>
+                        <th>Totale</th>
+                        <th class="col-width-180">Azioni</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for order in orders %}
+                        <tr>
+                            <td><strong>#{{ order.id }}</strong></td>
+                            <td>{{ order.user.username }}</td>
+                            <td>{{ order.created|date:"d M Y H:i" }}</td>
+                            <td>
+                                <span class="shipping-status-badge">
+                                    {{ order.get_shipping_status_display }}
+                                </span>
+                            </td>
+                            <td><strong>€{{ order.get_total_cost }}</strong></td>
+                            <td class="actions">
+                                <a href="{% url 'dashboard:order_update' order.id %}" class="btn-dashboard btn-edit">Aggiorna</a>
+                                <form action="{% url 'dashboard:order_delete' order.id %}" method="post" class="inline-form">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn-dashboard btn-delete" onclick="return confirm('Eliminare l ordine #{{ order.id }}?')">Elimina</button>
+                                </form>
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="6" class="empty-table-msg">Nessun ordine ricevuto finora.</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </details>
+    {% endif %}
+
+    <!-- SEZIONE RECENSIONI -->
+    <details class="dashboard-section">
+        <summary class="section-header">
+            <h2>Gestione Recensioni</h2>
+            <div class="section-header-actions">
+                <input type="text" placeholder="Cerca recensione..." data-js="search-table" data-search-table="reviews-table" class="form-input">
+            </div>
+        </summary>
+        
+        <div class="table-container">
+            <table class="dashboard-table" id="reviews-table">
+                <thead>
+                    <tr>
+                        <th>Prodotto</th>
+                        <th>Utente</th>
+                        <th>Valutazione</th>
+                        <th>Commento</th>
+                        <th>Data</th>
+                        <th class="col-width-100">Azioni</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for review in reviews %}
+                        <tr>
+                            <td>{{ review.product.name }}</td>
+                            <td><strong>{{ review.user.username }}</strong></td>
+                            <td>
+                                <span class="review-rating">
+                                    {{ review.rating }} / 5
+                                </span>
+                            </td>
+                            <td>{{ review.comment }}</td>
+                            <td>{{ review.created_at|date:"d M Y H:i" }}</td>
+                            <td class="actions">
+                                <form action="{% url 'dashboard:review_delete' review.id %}" method="post" class="inline-form">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn-dashboard btn-delete" onclick="return confirm('Eliminare questa recensione?')">Elimina</button>
+                                </form>
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="6" class="empty-table-msg">Nessuna recensione presente nel database.</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </details>
+</div>
+
+<script src="{% static 'js/dashboard.js' %}"></script>
+{% endblock %}

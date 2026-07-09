@@ -1,0 +1,123 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}PC Builder - Step {{ step }} di {{ total_steps }}{% endblock %}
+
+{% block css %}
+    <link rel="stylesheet" href="{% static 'css/pc_builder.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="builder-container">
+    <!-- Mostra una barra di avanzamento mentre si costruisce il pc -->
+    <div class="progress-tracker">
+        {% for s in steps_data %}
+            <div class="step-indicator {% if s.is_current %}active{% elif s.is_completed %}completed{% endif %}">
+                <div class="step-number">
+                    {{ s.number }}
+                </div>
+                <div class="step-name">{{ s.name }}</div>
+            </div>
+            {% if not forloop.last %}
+                <div class="step-line {% if s.is_completed %}completed{% endif %}"></div>
+            {% endif %}
+        {% endfor %}
+    </div>
+
+    <!-- Loyout principale -->
+    <div class="builder-layout">
+        <!-- Colonna di selezione prodotti -->
+        <div class="builder-main">
+            <div class="builder-header">
+                <h2>Seleziona: {{ category_name }}</h2>
+                <div class="search-container">
+                    <input type="text" data-js="search-input" class="search-input js-search-input" placeholder="Cerca componente...">
+                </div>
+            </div>
+
+            {% if compatibility_applied %}
+                <div class="compatibility-badge">
+                    <span><strong>Filtro Compatibilità:</strong> Sto mostrando solo componenti compatibili ({{ compatibility_details }}).</span>
+                </div>
+            {% endif %}
+
+            {% if products %}
+                <div class="builder-products-list js-products-list" data-js="products-list">
+                    {% for product in products %}
+                        <div class="builder-product-card js-product-card" data-js="product-card" data-name="{{ product.name }}" data-desc="{{ product.description }}">
+                            <div class="product-thumb">
+                                {% if product.image %}
+                                    <img src="{{ product.image.url }}?t={% now 'U' %}" alt="{{ product.name }}">
+                                {% else %}
+                                    <div class="placeholder-img">NESSUNA IMMAGINE</div>
+                                {% endif %}
+                            </div>
+                            <div class="product-info">
+                                <div>
+                                    <h3>{{ product.name }}</h3>
+                                    <p>{{ product.description }}</p>
+                                </div>
+                                <div class="product-meta">
+                                    <span class="product-price">
+                                        {% if product.discount_price %}
+                                            <span class="product-price-original">€{{ product.price }}</span>
+                                            <span class="product-price-discount">€{{ product.discount_price }}</span>
+                                        {% else %}
+                                            €{{ product.price }}
+                                        {% endif %}
+                                    </span>
+                                    <form method="post" action="{% url 'catalog:pc_builder_step' step %}">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="product_id" value="{{ product.id }}">
+                                        <button type="submit" class="btn-select">Seleziona</button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="empty-state">
+                    Nessun prodotto disponibile in questa categoria al momento.
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Colonna di summary -->
+        <div class="builder-sidebar">
+            <h3 class="sidebar-title">La tua Configurazione</h3>
+            <div class="sidebar-slots">
+                {% for s in steps_data %}
+                    <div class="sidebar-slot {% if s.is_current %}active{% endif %}">
+                        <div class="summary-item-info">
+                            <span class="slot-label">{{ s.name }}</span>
+                            {% if s.product %}
+                                <div class="slot-val filled" title="{{ s.product.name }}">{{ s.product.name }}</div>
+                                <div class="slot-price">€{{ s.product.current_price }}</div>
+                            {% else %}
+                                <div class="slot-val">— Da selezionare —</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+
+            <div class="sidebar-summary">
+                <div class="total-box">
+                    <span>Totale Parziale:</span>
+                    <span class="total-val">€{{ total_price|floatformat:2 }}</span>
+                </div>
+                <div class="sidebar-actions">
+                    {% if step > 1 %}
+                        <a href="{% url 'catalog:pc_builder_step' step|add:"-1" %}" class="btn-sidebar-outline">⬅ Indietro</a>
+                    {% endif %}
+                    <a href="{% url 'catalog:pc_builder_summary' %}" class="btn-sidebar-primary">Vedi Riepilogo</a>
+                    <a href="{% url 'catalog:pc_builder_clear' %}" data-js="clear-build" class="btn-sidebar-outline js-clear-build">Ricomincia</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="{% static 'js/pc_builder.js' %}"></script>
+{% endblock %}

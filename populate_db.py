@@ -9,7 +9,8 @@ django.setup()
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group, Permission
 from django.contrib.contenttypes.models import ContentType
-from shop.models import Category, Product, DiscountCode, Review, Order
+from catalog.models import Category, Product, Review
+from orders.models import DiscountCode, Order
 
 User = get_user_model()
 

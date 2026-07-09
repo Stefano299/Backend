@@ -1,0 +1,1 @@
+# La dashboard gestisce i models presenti nelle altre app (Catalog e Orders)

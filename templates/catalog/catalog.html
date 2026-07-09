@@ -1,0 +1,157 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Catalogo Componenti - PC Builder{% endblock %}
+
+{% block css %}
+    <link rel="stylesheet" href="{% static 'css/catalog.css' %}?t={% now 'U' %}">
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>Catalogo Componenti</h1>
+    <p>Trova l'hardware perfetto per il tuo PC.</p>
+</div>
+
+<div class="catalog-layout">
+    <aside class="sidebar">
+        <form method="GET" action="">
+            <div class="filter-group">
+                <label for="search">Cerca Prodotto</label>
+                <input type="text" name="q" id="search" placeholder="Cerca..." class="form-input" value="{{ search_query|default:'' }}">
+            </div>
+
+            <input type="hidden" name="sort" value="{{ sort_by|default:'' }}">
+
+            <div class="filter-group">
+                <label>Categorie</label>
+                <div class="radio-list">
+                    {% for cat in categories %}
+                        <label class="radio-label">
+                            <input type="checkbox" name="categories" value="{{ cat.id }}" {% if cat.id|slugify in selected_categories %}checked{% endif %}>
+                            <span class="custom-checkbox"></span>
+                            <span class="category-name">{{ cat.name }}</span>
+                        </label>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <div class="filter-group">
+                <label>Fascia di Prezzo: <span id="price-range-display" data-js="price-range-display" class="price-display">€{{ min_price|default:0 }} - €{{ max_price|default:max_limit }}</span></label>
+                <div class="double-slider-container" data-js="double-slider-container">
+                    <div class="slider-track" data-js="slider-track"></div>
+                    <input type="range" name="min_price" id="min-price-slider" data-js="min-price-slider" min="0" max="{{ max_limit }}" value="{{ min_price|default:0 }}" class="double-slider">
+                    <input type="range" name="max_price" id="max-price-slider" data-js="max-price-slider" min="0" max="{{ max_limit }}" value="{{ max_price|default:max_limit }}" class="double-slider">
+                </div>
+            </div>
+
+            <button type="submit" class="btn-filter">Applica Filtri</button>
+            {% if search_query or selected_categories or min_price or max_price %}
+                <a href="{% url 'catalog:product_list' %}" class="btn-reset">Azzera Filtri</a>
+            {% endif %}
+        </form>
+    </aside>
+
+    <script src="{% static 'js/slider.js' %}?v=3"></script>
+
+    <section class="products-area">
+        <div class="products-area-header">
+            <div class="results-count">Prodotti trovati: {{ products.paginator.count }}</div>
+            <div class="sort-container">
+                <label for="sort-select">Ordina per:</label>
+                <form method="GET" action="" class="catalog-sort-form">
+                    {% if search_query %}<input type="hidden" name="q" value="{{ search_query }}">{% endif %}
+                    {% if min_price %}<input type="hidden" name="min_price" value="{{ min_price }}">{% endif %}
+                    {% if max_price %}<input type="hidden" name="max_price" value="{{ max_price }}">{% endif %}
+                    {% for cat_id in selected_categories %}
+                        <input type="hidden" name="categories" value="{{ cat_id }}">
+                    {% endfor %}
+                    <select name="sort" id="sort-select" class="form-input-sort" onchange="this.form.submit()">
+                        <option value="newest" {% if sort_by == 'newest' %}selected{% endif %}>Più Recenti</option>
+                        <option value="price_asc" {% if sort_by == 'price_asc' %}selected{% endif %}>Prezzo: Crescente</option>
+                        <option value="price_desc" {% if sort_by == 'price_desc' %}selected{% endif %}>Prezzo: Decrescente</option>
+                        <option value="name_asc" {% if sort_by == 'name_asc' %}selected{% endif %}>Nome</option>
+                    </select>
+                </form>
+            </div>
+        </div>
+
+        {% if products %}
+            <div class="product-grid">
+                {% for product in products %}
+                    <a href="{% url 'catalog:product_detail' product.id %}" class="product-card">
+                        <div class="card-image">
+                            {% if product.image %}
+                                <img src="{{ product.image.url }}?t={% now 'U' %}" alt="{{ product.name }}">
+                            {% else %}
+                                <div class="placeholder-img">NESSUNA IMMAGINE</div>
+                            {% endif %}
+                        </div>
+                        <div class="card-content">
+                            <h3 class="card-title">{{ product.name }}</h3>
+                            <div class="catalog-tags">
+                                {% for cat in product.categories.all %}
+                                    <span class="catalog-tag">{{ cat.name }}</span>
+                                {% endfor %}
+                                {% if product.stock <= 0 %}
+                                    <span class="catalog-tag out-of-stock-tag">Esaurito</span>
+                                {% endif %}
+                            </div>
+                            <div class="product-card-rating">
+                                {% if product.get_average_rating %}
+                                    <span class="rating-stars">
+                                        {% for i in product.get_stars_filled %}
+                                            <svg class="star-icon-catalog filled" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 .587l3.668 7.431 8.2 1.191-5.934 5.784 1.4 8.168L12 18.896l-7.334 3.854 1.4-8.168L.132 9.409l8.2-1.191z"/></svg>
+                                        {% endfor %}
+                                        {% for i in product.get_stars_empty %}
+                                            <svg class="star-icon-catalog empty" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 .587l3.668 7.431 8.2 1.191-5.934 5.784 1.4 8.168L12 18.896l-7.334 3.854 1.4-8.168L.132 9.409l8.2-1.191z"/></svg>
+                                        {% endfor %}
+                                    </span>
+                                {% else %}
+                                    <span class="rating-no-reviews-catalog">Nessuna recensione</span>
+                                {% endif %}
+                            </div>
+
+                            <p class="card-desc">{{ product.description|truncatewords:15 }}</p>
+                            <div class="card-bottom">
+                                {% if product.discount_price %}
+                                    <div>
+                                        <span class="card-price-original">€{{ product.price }}</span>
+                                        <span class="card-price-discount">€{{ product.discount_price }}</span>
+                                    </div>
+                                {% else %}
+                                    <span class="card-price">€{{ product.price }}</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </a>
+                {% endfor %}
+            </div>
+
+            {% if products.has_other_pages %}
+                <div class="pagination">
+                    {% if products.has_previous %}
+                        <a href="?page={{ products.previous_page_number }}{% if query_string %}&{{ query_string }}{% endif %}" class="pagination-btn">&lsaquo;</a>
+                    {% endif %}
+
+                    {% for page_num in products.paginator.page_range %}
+                        {% if products.number == page_num %}
+                            <span class="pagination-btn active">{{ page_num }}</span>
+                        {% else %}
+                            <a href="?page={{ page_num }}{% if query_string %}&{{ query_string }}{% endif %}" class="pagination-btn">{{ page_num }}</a>
+                        {% endif %}
+                    {% endfor %}
+
+                    {% if products.has_next %}
+                        <a href="?page={{ products.next_page_number }}{% if query_string %}&{{ query_string }}{% endif %}" class="pagination-btn">&rsaquo;</a>
+                    {% endif %}
+                </div>
+            {% endif %}
+        {% else %}
+            <div class="empty-state">
+                <p>Nessun componente trovato. Modifica i filtri e riprova.</p>
+            </div>
+        {% endif %}
+    </section>
+</div>
+{% endblock %}

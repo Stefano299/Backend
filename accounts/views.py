@@ -9,7 +9,7 @@ from .models import CustomUser
 class SignUpView(SuccessMessageMixin, generic.CreateView):
     form_class = CustomUserCreationForm
     success_url = reverse_lazy('login')
-    template_name = 'registration/signup.html'
+    template_name = 'accounts/signup.html'
     success_message = "Registrazione completata con successo! Ora puoi effettuare l'accesso."
     
     def form_valid(self, form):
@@ -21,7 +21,7 @@ class SignUpView(SuccessMessageMixin, generic.CreateView):
 class ProfileUpdateView(LoginRequiredMixin, SuccessMessageMixin, generic.UpdateView):
     model = CustomUser
     form_class = UserProfileForm
-    template_name = 'registration/profile.html'
+    template_name = 'accounts/profile.html'
     success_url = reverse_lazy('profile')
     success_message = "Profilo aggiornato con successo."
 
