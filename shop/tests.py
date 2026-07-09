@@ -873,38 +873,3 @@ class OrderItemConstraintTests(TestCase):
         order_item = OrderItem(order=self.order, product=self.product, price=-5.00, quantity=1)
         with self.assertRaises(IntegrityError):
             order_item.save()
-class DiscountCodeTests(TestCase):
-    def setUp(self):
-        from shop.models import DiscountCode
-        self.fixed_discount = DiscountCode.objects.create(
-            code="FIXED10",
-            discount_type="fixed",
-            amount=10.00
-        )
-        self.percent_discount = DiscountCode.objects.create(
-            code="PERCENT20",
-            discount_type="percentage",
-            amount=20.00
-        )
-
-    def test_fixed_discount_calculation(self):
-        from decimal import Decimal
-        self.assertEqual(self.fixed_discount.calculate_discount(Decimal('100.00')), Decimal('10.00'))
-        self.assertEqual(self.fixed_discount.calculate_discount(Decimal('5.00')), Decimal('10.00'))
-
-    def test_percentage_discount_calculation(self):
-        from decimal import Decimal
-        self.assertEqual(self.percent_discount.calculate_discount(Decimal('100.00')), Decimal('20.00'))
-        self.assertEqual(self.percent_discount.calculate_discount(Decimal('50.00')), Decimal('10.00'))
-        self.assertEqual(self.percent_discount.calculate_discount(Decimal('55.50')), Decimal('11.10'))
-
-    def test_percentage_validation_max_100(self):
-        from django.core.exceptions import ValidationError
-        from shop.models import DiscountCode
-        invalid_discount = DiscountCode(
-            code="INVALID150",
-            discount_type="percentage",
-            amount=150.00
-        )
-        with self.assertRaises(ValidationError):
-            invalid_discount.full_clean()

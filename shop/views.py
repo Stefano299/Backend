@@ -51,16 +51,16 @@ class ProductListView(ListView):
         if not sort_by:
             sort_by = 'newest'
             
-        if sort_by == 'price_asc':
-            queryset = queryset.order_by('active_price', 'id')
-        elif sort_by == 'price_desc':
-            queryset = queryset.order_by('-active_price', 'id')
-        elif sort_by == 'name_asc':
-            queryset = queryset.order_by('name', 'id')
-        elif sort_by == 'newest':
-            queryset = queryset.order_by('-id')
-        else:
-            queryset = queryset.order_by('-id')
+        # Uso un match tatement al posto di una serie di if (da python 3.10 in poi)
+        match sort_by:
+            case 'price_asc':
+                queryset = queryset.order_by('active_price', 'id')
+            case 'price_desc':
+                queryset = queryset.order_by('-active_price', 'id')
+            case 'name_asc':
+                queryset = queryset.order_by('name', 'id')
+            case 'newest' | _:
+                queryset = queryset.order_by('-id')
             
         return queryset
 
@@ -225,27 +225,19 @@ def checkout(request):
         if form.is_valid():
             # Salva o aggiorna quelli inseriti nel profilo utente
             user_updated = False
-            if form.cleaned_data['first_name'] and user.first_name != form.cleaned_data['first_name']:
-                user.first_name = form.cleaned_data['first_name']
-                user_updated = True
-            if form.cleaned_data['last_name'] and user.last_name != form.cleaned_data['last_name']:
-                user.last_name = form.cleaned_data['last_name']
-                user_updated = True
-            if form.cleaned_data['email'] and user.email != form.cleaned_data['email']:
-                user.email = form.cleaned_data['email']
-                user_updated = True
-            if form.cleaned_data['indirizzo'] and user.indirizzo != form.cleaned_data['indirizzo']:
-                user.indirizzo = form.cleaned_data['indirizzo']
-                user_updated = True
-            if form.cleaned_data['citta'] and user.citta != form.cleaned_data['citta']:
-                user.citta = form.cleaned_data['citta']
-                user_updated = True
-            if form.cleaned_data['codice_postale'] and user.codice_postale != form.cleaned_data['codice_postale']:
-                user.codice_postale = form.cleaned_data['codice_postale']
-                user_updated = True
-            if form.cleaned_data['numero_di_telefono'] and user.numero_di_telefono != form.cleaned_data['numero_di_telefono']:
-                user.numero_di_telefono = form.cleaned_data['numero_di_telefono']
-                user_updated = True
+
+            fields_to_update = [
+                'first_name', 'last_name', 'email', 'indirizzo',
+                'citta', 'codice_postale', 'numero_di_telefono'
+            ]
+
+            # Questo loop consente di evitare una enorme serie di if statement
+            # Semplicemente cicla i campi del form e aggiorna l'utente se necessario 
+            for field in fields_to_update:
+                val = form.cleaned_data.get(field)
+                if val and getattr(user, field) != val:
+                    setattr(user, field, val)
+                    user_updated = True
             if user_updated:
                 user.save()
             
