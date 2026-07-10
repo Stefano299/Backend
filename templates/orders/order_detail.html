@@ -95,6 +95,16 @@
                                 </td>
                             </tr>
                         {% endfor %}
+                        {% if order.discount_amount > 0 %}
+                            <tr>
+                                <td colspan="3" style="text-align: right; font-weight: bold;">Subtotale:</td>
+                                <td>€{{ order.get_subtotal_cost }}</td>
+                            </tr>
+                            <tr class="discount-row" style="color: #27ae60;">
+                                <td colspan="3" style="text-align: right; font-weight: bold;">Sconto ({% if order.discount_code %}{{ order.discount_code.code }}{% if order.discount_code.discount_type == 'percentage' %} -{{ order.discount_code.amount|floatformat:0 }}%{% endif %}{% else %}Codice rimosso{% endif %}):</td>
+                                <td>-€{{ order.discount_amount }}</td>
+                            </tr>
+                        {% endif %}
                         <tr class="total-row">
                             <td colspan="3">Totale Ordine:</td>
                             <td class="total-price">€{{ order.get_total_cost }}</td>

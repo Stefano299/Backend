@@ -2,7 +2,12 @@ from django.contrib import admin
 from .models import Order, OrderItem, DiscountCode
 
 admin.site.register(OrderItem)
-admin.site.register(DiscountCode)
+
+@admin.register(DiscountCode)
+class DiscountCodeAdmin(admin.ModelAdmin):
+    list_display = ('code', 'discount_type', 'amount')
+    list_filter = ('discount_type',)
+    search_fields = ('code',)
 
 @admin.register(Order)
 class OrderAdmin(admin.ModelAdmin):

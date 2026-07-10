@@ -60,7 +60,13 @@ def cart_detail(request):
             'override': True
         })
     discount_form = DiscountApplyForm()
-    return render(request, 'orders/cart_detail.html', {'cart': cart, 'discount_form': discount_form})
+    discount = cart.get_discount()
+    discount_amount = discount.calculate_discount(cart.get_subtotal()) if discount else 0
+    return render(request, 'orders/cart_detail.html', {
+        'cart': cart,
+        'discount_form': discount_form,
+        'discount_amount': discount_amount
+    })
 
 @require_POST
 @login_required
@@ -130,7 +136,7 @@ def checkout(request):
             discount = cart.get_discount()
             if discount:
                 order.discount_code = discount
-                order.discount_amount = discount.amount
+                order.discount_amount = discount.calculate_discount(cart.get_subtotal())
             order.save()
             
             for item in cart:
@@ -164,9 +170,12 @@ def checkout(request):
         }
         form = OrderCreateForm(initial=initial_data)
         
+    discount = cart.get_discount()
+    discount_amount = discount.calculate_discount(cart.get_subtotal()) if discount else 0
     return render(request, 'orders/checkout.html', {
         'cart': cart,
-        'form': form
+        'form': form,
+        'discount_amount': discount_amount
     })
 
 class OrderCreatedView(LoginRequiredMixin, DetailView):

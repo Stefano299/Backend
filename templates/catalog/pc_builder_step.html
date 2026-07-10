@@ -9,6 +9,17 @@
 
 {% block content %}
 <div class="builder-container">
+    {% if step > 1 %}
+        <div class="builder-back-container">
+            <a href="{% url 'catalog:pc_builder_step' step|add:"-1" %}" class="btn-back">
+                <svg class="back-arrow-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M19 12H5M5 12L12 19M5 12L12 5" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                <span>Indietro</span>
+            </a>
+        </div>
+    {% endif %}
+
     <!-- Mostra una barra di avanzamento mentre si costruisce il pc -->
     <div class="progress-tracker">
         {% for s in steps_data %}
@@ -108,9 +119,6 @@
                     <span class="total-val">€{{ total_price|floatformat:2 }}</span>
                 </div>
                 <div class="sidebar-actions">
-                    {% if step > 1 %}
-                        <a href="{% url 'catalog:pc_builder_step' step|add:"-1" %}" class="btn-sidebar-outline">Indietro</a>
-                    {% endif %}
                     <a href="{% url 'catalog:pc_builder_summary' %}" class="btn-sidebar-primary">Vedi Riepilogo</a>
                     <a href="{% url 'catalog:pc_builder_clear' %}" data-js="clear-build" class="btn-sidebar-outline js-clear-build">Ricomincia</a>
                 </div>

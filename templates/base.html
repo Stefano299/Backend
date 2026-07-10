@@ -42,20 +42,22 @@
         </div>
     </nav>
 
-    {% block fullwidth_top %}{% endblock %}
-
-    <main class="container">
-        {% if messages %}
+    {% if messages %}
+        <div class="messages-container-wrapper">
             <div class="messages-container">
                 {% for message in messages %}
                     <div class="alert alert-{{ message.tags }}">
                         <span class="alert-text">{{ message }}</span>
-                        <button class="close-alert-btn" onclick="this.parentElement.remove();">&times;</button>
+                        <button class="close-alert-btn" onclick="const alert = this.closest('.alert'); const container = alert.parentElement; alert.remove(); if (container && !container.querySelector('.alert')) { const wrapper = container.closest('.messages-container-wrapper') || container; wrapper.remove(); }">&times;</button>
                     </div>
                 {% endfor %}
             </div>
-        {% endif %}
+        </div>
+    {% endif %}
 
+    {% block fullwidth_top %}{% endblock %}
+
+    <main class="container">
         {% block content %}{% endblock %}
     </main>
 

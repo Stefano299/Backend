@@ -66,7 +66,7 @@ class Cart:
                     defaults={'quantity': item['quantity']}
                 )
                 current_product_ids.append(p_id)
-            # Rimuoviamo dal DB gli elementi non più presenti nel carrello
+            # Rimuovo dal DB gli elementi non più presenti nel carrello
             CartItem.objects.filter(user=self.user).exclude(product_id__in=current_product_ids).delete()
         else:
             self.session['cart'] = self.cart
@@ -106,7 +106,7 @@ class Cart:
         subtotal = self.get_subtotal()
         discount = self.get_discount()
         if discount:
-            return max(Decimal('0'), subtotal - discount.amount)
+            return max(Decimal('0'), subtotal - discount.calculate_discount(subtotal))
         return subtotal
 
     def get_total_items(self):

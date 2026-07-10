@@ -269,6 +269,14 @@ body.nav-open {
 }
 
 /* Notifiche */
+.messages-container-wrapper {
+    max-width: 95%;
+    margin: 0 auto;
+    padding-top: 1.5rem;
+    width: 100%;
+    box-sizing: border-box;
+}
+
 .messages-container {
     margin-bottom: 2rem;
     display: flex;

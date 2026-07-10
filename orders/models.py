@@ -4,11 +4,29 @@ from django.core.validators import MinValueValidator
 from catalog.models import Product
 
 class DiscountCode(models.Model):
+    DISCOUNT_TYPE_CHOICES = [
+        ('fixed', 'Fisso (€)'),
+        ('percentage', 'Percentuale (%)'),
+    ]
     code = models.CharField(max_length=50, unique=True, verbose_name="Codice Sconto")
-    amount = models.DecimalField(max_digits=10, decimal_places=2, validators=[MinValueValidator(0)], verbose_name="Importo Sconto")
+    discount_type = models.CharField(
+        max_length=15,
+        choices=DISCOUNT_TYPE_CHOICES,
+        default='fixed',
+        verbose_name="Tipo di Sconto"
+    )
+    amount = models.DecimalField(max_digits=10, decimal_places=2, validators=[MinValueValidator(0)], verbose_name="Valore Sconto")
     
     def __str__(self):
-        return self.code
+        return f"{self.code} ({self.get_discount_type_display()}: {self.amount})"
+
+    def calculate_discount(self, subtotal):
+        from decimal import Decimal, ROUND_HALF_UP
+        if self.discount_type == 'percentage':
+            discount_val = (subtotal * self.amount) / Decimal('100')
+            discount_val = discount_val.quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
+            return min(subtotal, discount_val)
+        return min(subtotal, self.amount)
 
 class Order(models.Model):
     SHIPPING_STATUS_CHOICES = [
@@ -59,6 +77,9 @@ class Order(models.Model):
     def get_total_cost(self):
         total = sum(item.get_cost() for item in self.items.all())
         return max(0, total - self.discount_amount)
+
+    def get_subtotal_cost(self):
+        return sum(item.get_cost() for item in self.items.all())
 
     # Serve alla barra di avanzamento della spedizione mostrata nel frontend
     def return_order_number(self):

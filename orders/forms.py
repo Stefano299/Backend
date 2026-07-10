@@ -49,8 +49,20 @@ class DiscountApplyForm(forms.Form):
 class DiscountCodeForm(forms.ModelForm):
     class Meta:
         model = DiscountCode
-        fields = ['code', 'amount']
+        fields = ['code', 'discount_type', 'amount']
         widgets = {
             'code': forms.TextInput(attrs={'class': 'form-control'}),
+            'discount_type': forms.Select(attrs={'class': 'form-control'}),
             'amount': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}),
         }
+
+    # Non controllo sia >= 0 ovviamente perchè lo ho già imposto attraverso i validators nel mode
+    def clean(self):
+        cleaned_data = super().clean()
+        discount_type = cleaned_data.get('discount_type')
+        amount = cleaned_data.get('amount')
+        
+        if discount_type == 'percentage' and amount is not None:
+            if amount > 100:
+                raise forms.ValidationError("Lo sconto percentuale non può essere superiore al 100%.")
+        return cleaned_data

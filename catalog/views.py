@@ -143,19 +143,34 @@ def add_review(request, product_id):
 
 # ------------------PC BUILDER (Quello per creare il PC in modo guidato)-------------------------
 
+# Funzione helper che se trova categorie base mancanti ritorna un HttpResponseRedirect (il pc builder non può funzionare se manca una categoria base)
+def _check_pc_builder_categories(request):
+    categories_order = [
+        'Processore', 'Dissipatore', 'Scheda Madre', 'Memoria RAM',
+        'Scheda Video', 'Storage', 'Alimentatore', 'Case'
+    ]
+    missing_categories = [cat for cat in categories_order if not Category.objects.filter(name=cat).exists()]
+    if missing_categories:
+        missing_str = ", ".join(missing_categories)
+        messages.error(request, f"Questa funzione non è più disponibile in quanto è stata eliminata una categoria base: {missing_str}")
+        return redirect('home')
+    return None
+
 def pc_builder_step(request, step=1):
     categories_order = [
         'Processore', 'Dissipatore', 'Scheda Madre', 'Memoria RAM',
         'Scheda Video', 'Storage', 'Alimentatore', 'Case'
     ]
     
+    redirect_response = _check_pc_builder_categories(request)
+    if redirect_response:
+        return redirect_response
+            
     if step < 1 or step > len(categories_order):
         return redirect('catalog:pc_builder_step', step=1)
         
     current_cat_name = categories_order[step - 1]
     category = Category.objects.filter(name=current_cat_name).first()
-    if not category:
-        raise Http404("Categoria non trovata")
     
     # Carica tutti i prodotti nel db per la categoria
     products = Product.objects.filter(categories=category, stock__gt=0)
@@ -272,6 +287,10 @@ def pc_builder_step(request, step=1):
     })
 
 def pc_builder_summary(request):
+    redirect_response = _check_pc_builder_categories(request)
+    if redirect_response:
+        return redirect_response
+        
     categories_order = [
         'Processore', 'Dissipatore', 'Scheda Madre', 'Memoria RAM',
         'Scheda Video', 'Storage', 'Alimentatore', 'Case'
@@ -320,6 +339,10 @@ def pc_builder_summary(request):
     })
 
 def pc_builder_clear(request):
+    redirect_response = _check_pc_builder_categories(request)
+    if redirect_response:
+        return redirect_response
+            
     # Cancella tutti i dati dell'assemblaggio salvati in sessione
     for i in range(1, 9):
         key = f'pc_build_step_{i}'

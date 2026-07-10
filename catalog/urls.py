@@ -8,7 +8,7 @@ urlpatterns = [
     path("products/<int:pk>/", views.ProductDetailView.as_view(), name="product_detail"),
     path("products/<int:product_id>/review/", views.add_review, name="add_review"),
     
-    # PC Building
+    # PC Building (la pagina della scelta dei componenti guidata)
     path("builder/step/<int:step>/", views.pc_builder_step, name="pc_builder_step"),
     path("builder/summary/", views.pc_builder_summary, name="pc_builder_summary"),
     path("builder/clear/", views.pc_builder_clear, name="pc_builder_clear"),

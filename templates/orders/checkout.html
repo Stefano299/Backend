@@ -139,6 +139,12 @@
             <span>Articoli:</span>
             <span>{{ cart.get_total_items }}</span>
         </div>
+        {% if cart.get_discount %}
+            <div class="summary-row discount" style="color: #27ae60;">
+                <span>Sconto ({{ cart.get_discount.code }}{% if cart.get_discount.discount_type == 'percentage' %} -{{ cart.get_discount.amount|floatformat:0 }}%{% endif %}):</span>
+                <span>-€{{ discount_amount }}</span>
+            </div>
+        {% endif %}
         <div class="summary-row total">
             <span>Totale:</span>
             <span>€{{ cart.get_total_price }}</span>

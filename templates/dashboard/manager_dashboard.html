@@ -218,7 +218,7 @@
                     <tr>
                         <th class="col-width-100">ID</th>
                         <th>Codice</th>
-                        <th>Importo Sconto</th>
+                        <th>Valore Sconto</th>
                         <th class="col-width-180">Azioni</th>
                     </tr>
                 </thead>
@@ -227,7 +227,13 @@
                         <tr>
                             <td>#{{ discount.id }}</td>
                             <td><strong>{{ discount.code }}</strong></td>
-                            <td>€{{ discount.amount }}</td>
+                            <td>
+                                {% if discount.discount_type == 'percentage' %}
+                                    {{ discount.amount|floatformat:0 }}%
+                                {% else %}
+                                    €{{ discount.amount }}
+                                {% endif %}
+                            </td>
                             <td class="actions">
                                 <a href="{% url 'dashboard:discount_update' discount.id %}" class="btn-dashboard btn-edit">Modifica</a>
                                 <form action="{% url 'dashboard:discount_delete' discount.id %}" method="post" class="inline-form">

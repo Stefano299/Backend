@@ -1,6 +1,5 @@
 import os
 import django
-import random
 from decimal import Decimal
 
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'django_project.settings')
@@ -10,22 +9,25 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group, Permission
 from django.contrib.contenttypes.models import ContentType
 from catalog.models import Category, Product, Review
-from orders.models import DiscountCode, Order
+from orders.models import DiscountCode, Order, OrderItem, CartItem
 
 User = get_user_model()
 
 def run():
     print("Flushing database...")
+    CartItem.objects.all().delete()
+    OrderItem.objects.all().delete()
     Order.objects.all().delete()
-    DiscountCode.objects.all().delete()
     Review.objects.all().delete()
     Product.objects.all().delete()
     Category.objects.all().delete()
     User.objects.all().delete()
     Group.objects.all().delete()
+    DiscountCode.objects.all().delete()
 
     print("Creating Groups and Permissions...")
     manager_group, _ = Group.objects.get_or_create(name='Store Manager')
+    customer_group, _ = Group.objects.get_or_create(name='Customer')
     
     for model in [Product, Category, Review, Order, DiscountCode]:
         content_type = ContentType.objects.get_for_model(model)
@@ -35,12 +37,71 @@ def run():
 
     print("Creating Users...")
     admin = User.objects.create_superuser(username='admin', password='admin12345', email='admin@demo.com')
+    
     manager = User.objects.create_user(username='manager', password='manager12345', email='manager@demo.com', is_staff=True)
     manager.groups.add(manager_group)
+    
+    # 3 basic users who will have left the most reviews (5 reviews each)
     bob = User.objects.create_user(username='bob', password='bob12345', email='bob@demo.com')
+    bob.groups.add(customer_group)
+    bob.first_name = "Bob"
+    bob.last_name = "Rossi"
+    bob.indirizzo = "Via Roma 1"
+    bob.citta = "Milano"
+    bob.codice_postale = "20121"
+    bob.numero_di_telefono = "3331234567"
+    bob.save()
+
     bobby = User.objects.create_user(username='bobby', password='bobby12345', email='bobby@demo.com')
+    bobby.groups.add(customer_group)
+    bobby.first_name = "Bobby"
+    bobby.last_name = "Verdi"
+    bobby.indirizzo = "Corso Vittorio 10"
+    bobby.citta = "Torino"
+    bobby.codice_postale = "10100"
+    bobby.numero_di_telefono = "3337654321"
+    bobby.save()
+
     taylor = User.objects.create_user(username='taylor', password='taylor12345', email='taylor@demo.com')
+    taylor.groups.add(customer_group)
+    taylor.first_name = "Taylor"
+    taylor.last_name = "Bianchi"
+    taylor.indirizzo = "Via Garibaldi 5"
+    taylor.citta = "Firenze"
+    taylor.codice_postale = "50100"
+    taylor.numero_di_telefono = "3339876543"
+    taylor.save()
+
+    # Basic users with fewer reviews (2 reviews or 1 review)
     john = User.objects.create_user(username='john', password='john12345', email='john@demo.com')
+    john.groups.add(customer_group)
+    john.first_name = "John"
+    john.last_name = "Doe"
+    john.indirizzo = "Piazza Duomo 2"
+    john.citta = "Milano"
+    john.codice_postale = "20121"
+    john.numero_di_telefono = "3334445555"
+    john.save()
+
+    alice = User.objects.create_user(username='alice', password='alice12345', email='alice@demo.com')
+    alice.groups.add(customer_group)
+    alice.first_name = "Alice"
+    alice.last_name = "Neri"
+    alice.indirizzo = "Via Dante 12"
+    alice.citta = "Bologna"
+    alice.codice_postale = "40121"
+    alice.numero_di_telefono = "3335556666"
+    alice.save()
+
+    charlie = User.objects.create_user(username='charlie', password='charlie12345', email='charlie@demo.com')
+    charlie.groups.add(customer_group)
+    charlie.first_name = "Charlie"
+    charlie.last_name = "Marrone"
+    charlie.indirizzo = "Piazza Erbe 3"
+    charlie.citta = "Verona"
+    charlie.codice_postale = "37121"
+    charlie.numero_di_telefono = "3338889999"
+    charlie.save()
 
     print("Creating Categories...")
     cat_cpu = Category.objects.create(name='Processore')
@@ -208,7 +269,7 @@ def run():
             'image': 'products/powersupply.jpg',
             'categories': [cat_psu],
         },
-        # Dissipatori
+        # Coolers
         {
             'name': 'Noctua NH-D15',
             'description': 'Il re dei dissipatori ad aria. Include kit per LGA1700 e AM5.',
@@ -221,16 +282,33 @@ def run():
             'name': 'NZXT Kraken Elite 360',
             'description': 'Dissipatore a liquido AIO. Compatibile LGA1700 e AM5.',
             'price': Decimal('279.99'),
-            'stock': 0, # Esaurito
+            'discount_price': Decimal('249.99'),
+            'stock': 6,
             'image': 'products/cooler.jpg',
             'categories': [cat_cooler],
         },
-        # Case
+        {
+            'name': 'Be Quiet! Pure Rock 2 Black',
+            'description': 'Dissipatore ad aria per CPU silenzioso ed efficiente. Ottimizzato per sistemi Intel LGA1700/1200.',
+            'price': Decimal('39.99'),
+            'stock': 15,
+            'image': 'products/cooler.jpg',
+            'categories': [cat_cooler],
+        },
+        # Cases
         {
             'name': 'NZXT H9 Flow',
             'description': 'Case mid-tower a doppia camera per un flusso d\'aria eccezionale.',
             'price': Decimal('189.99'),
             'stock': 7,
+            'image': 'products/case.jpg',
+            'categories': [cat_case],
+        },
+        {
+            'name': 'Corsair 4000D Airflow',
+            'description': 'Case ATX mid-tower con pannello frontale ottimizzato per il massimo flusso d\'aria. Vetro temperato.',
+            'price': Decimal('99.99'),
+            'stock': 0,
             'image': 'products/case.jpg',
             'categories': [cat_case],
         },
@@ -243,30 +321,224 @@ def run():
             'stock': 22,
             'image': 'products/storage.jpg',
             'categories': [cat_storage],
+        },
+        {
+            'name': 'Crucial P3 Plus 1TB PCIe M.2 2280 SSD',
+            'description': 'SSD NVMe PCIe Gen4 con velocità di lettura fino a 5000MB/s.',
+            'price': Decimal('79.99'),
+            'stock': 25,
+            'image': 'products/storage.jpg',
+            'categories': [cat_storage],
         }
     ]
 
-    products_obj = []
+    products_map = {}
     for p_data in products_data:
         cats = p_data.pop('categories')
         p = Product.objects.create(**p_data)
         p.categories.set(cats)
-        products_obj.append(p)
+        products_map[p.name] = p
 
     print("Creating Discount Codes...")
-    DiscountCode.objects.create(code='SCONTO10', amount=Decimal('10.00'))
-    DiscountCode.objects.create(code='PROMO20', amount=Decimal('20.00'))
-    DiscountCode.objects.create(code='WELCOME5', amount=Decimal('5.00'))
+    dc_sconto10 = DiscountCode.objects.create(code='SCONTO10', discount_type='percentage', amount=Decimal('10.00'))
+    dc_promo20 = DiscountCode.objects.create(code='PROMO20', discount_type='fixed', amount=Decimal('20.00'))
+    dc_welcome5 = DiscountCode.objects.create(code='WELCOME5', discount_type='fixed', amount=Decimal('5.00'))
+
+    # Selected products for 3 reviews each
+    p_ryzen = products_map['AMD Ryzen 7 7800X3D']
+    p_rtx4080 = products_map['NVIDIA GeForce RTX 4080 Super']
+    p_samsung990 = products_map['Samsung 990 PRO M.2 NVMe SSD 2TB']
+
+    # Other products to review
+    p_i9 = products_map['Intel Core i9-14900K']
+    p_z790 = products_map['ASUS ROG Maximus Z790 Hero']
+    p_b650 = products_map['MSI MAG B650 Tomahawk WiFi']
+    p_ram_corsair = products_map['Corsair Vengeance RGB DDR5 32GB 6000MHz']
+    p_i5 = products_map['Intel Core i5-13600K']
+    p_rx7800 = products_map['AMD Radeon RX 7800 XT']
+    p_z790_p = products_map['MSI PRO Z790-P WIFI']
+    p_ram_crucial = products_map['Crucial Pro DDR4 32GB 3200MHz']
+    p_x670e = products_map['ASUS TUF Gaming X670E-PLUS']
+    p_ryzen5 = products_map['AMD Ryzen 5 7600X']
+    p_rx7900 = products_map['AMD Radeon RX 7900 XTX 24GB']
+    
+    # Newer products (placed on Page 1 of the catalog)
+    p_pure_rock = products_map['Be Quiet! Pure Rock 2 Black']
+    p_noctua = products_map['Noctua NH-D15']
+    p_h9 = products_map['NZXT H9 Flow']
+    p_crucial_p3 = products_map['Crucial P3 Plus 1TB PCIe M.2 2280 SSD']
+
+    print("Creating Orders...")
+    
+    # 1. Bob's Completed Order (contains products he will review)
+    order_bob = Order.objects.create(
+        user=bob,
+        first_name=bob.first_name,
+        last_name=bob.last_name,
+        email=bob.email,
+        indirizzo=bob.indirizzo,
+        citta=bob.citta,
+        codice_postale=bob.codice_postale,
+        numero_di_telefono=bob.numero_di_telefono,
+        payment_method='card',
+        shipping_status='consegnato',
+        discount_code=dc_sconto10,
+        discount_amount=Decimal('174.99')
+    )
+    OrderItem.objects.create(order=order_bob, product=p_ryzen, price=p_ryzen.price, quantity=1)
+    OrderItem.objects.create(order=order_bob, product=p_rtx4080, price=p_rtx4080.price, quantity=1)
+    OrderItem.objects.create(order=order_bob, product=p_samsung990, price=p_samsung990.current_price, quantity=1)
+    OrderItem.objects.create(order=order_bob, product=p_i9, price=p_i9.price, quantity=1)
+    OrderItem.objects.create(order=order_bob, product=p_z790, price=p_z790.price, quantity=1)
+    OrderItem.objects.create(order=order_bob, product=p_h9, price=p_h9.price, quantity=1)
+    
+    # Bob's secondary order (just to showcase multiple orders)
+    order_bob_2 = Order.objects.create(
+        user=bob,
+        first_name=bob.first_name,
+        last_name=bob.last_name,
+        email=bob.email,
+        indirizzo=bob.indirizzo,
+        citta=bob.citta,
+        codice_postale=bob.codice_postale,
+        numero_di_telefono=bob.numero_di_telefono,
+        payment_method='transfer',
+        shipping_status='ricevuto',
+    )
+    OrderItem.objects.create(order=order_bob_2, product=products_map['Corsair RM850x 850W 80+ Gold'], price=Decimal('149.99'), quantity=1)
+
+    # 2. Bobby's Order (contains products, In Transit)
+    order_bobby = Order.objects.create(
+        user=bobby,
+        first_name=bobby.first_name,
+        last_name=bobby.last_name,
+        email=bobby.email,
+        indirizzo=bobby.indirizzo,
+        citta=bobby.citta,
+        codice_postale=bobby.codice_postale,
+        numero_di_telefono=bobby.numero_di_telefono,
+        payment_method='paypal',
+        shipping_status='transito',
+    )
+    OrderItem.objects.create(order=order_bobby, product=p_ryzen, price=p_ryzen.price, quantity=1)
+    OrderItem.objects.create(order=order_bobby, product=p_rtx4080, price=p_rtx4080.price, quantity=1)
+    OrderItem.objects.create(order=order_bobby, product=p_samsung990, price=p_samsung990.current_price, quantity=1)
+    OrderItem.objects.create(order=order_bobby, product=p_b650, price=p_b650.price, quantity=1)
+    OrderItem.objects.create(order=order_bobby, product=p_ram_corsair, price=p_ram_corsair.price, quantity=1)
+    OrderItem.objects.create(order=order_bobby, product=p_pure_rock, price=p_pure_rock.price, quantity=1)
+    OrderItem.objects.create(order=order_bobby, product=p_noctua, price=p_noctua.price, quantity=1)
+
+    # 3. Taylor's Order (contains products, Received/elaborating)
+    order_taylor = Order.objects.create(
+        user=taylor,
+        first_name=taylor.first_name,
+        last_name=taylor.last_name,
+        email=taylor.email,
+        indirizzo=taylor.indirizzo,
+        citta=taylor.citta,
+        codice_postale=taylor.codice_postale,
+        numero_di_telefono=taylor.numero_di_telefono,
+        payment_method='card',
+        shipping_status='ricevuto',
+    )
+    OrderItem.objects.create(order=order_taylor, product=p_ryzen, price=p_ryzen.price, quantity=1)
+    OrderItem.objects.create(order=order_taylor, product=p_rtx4080, price=p_rtx4080.price, quantity=1)
+    OrderItem.objects.create(order=order_taylor, product=p_samsung990, price=p_samsung990.current_price, quantity=1)
+    OrderItem.objects.create(order=order_taylor, product=p_i5, price=p_i5.price, quantity=1)
+    OrderItem.objects.create(order=order_taylor, product=p_rx7800, price=p_rx7800.price, quantity=1)
+
+    # 4. John's Order (contains products, Consegnato)
+    order_john = Order.objects.create(
+        user=john,
+        first_name=john.first_name,
+        last_name=john.last_name,
+        email=john.email,
+        indirizzo=john.indirizzo,
+        citta=john.citta,
+        codice_postale=john.codice_postale,
+        numero_di_telefono=john.numero_di_telefono,
+        payment_method='card',
+        shipping_status='consegnato',
+        discount_code=dc_welcome5,
+        discount_amount=Decimal('5.00')
+    )
+    OrderItem.objects.create(order=order_john, product=p_z790_p, price=p_z790_p.price, quantity=1)
+    OrderItem.objects.create(order=order_john, product=p_ram_crucial, price=p_ram_crucial.price, quantity=1)
+    OrderItem.objects.create(order=order_john, product=p_crucial_p3, price=p_crucial_p3.price, quantity=1)
+
+    # 5. Alice's Order (contains products, Consegnato)
+    order_alice = Order.objects.create(
+        user=alice,
+        first_name=alice.first_name,
+        last_name=alice.last_name,
+        email=alice.email,
+        indirizzo=alice.indirizzo,
+        citta=alice.citta,
+        codice_postale=alice.codice_postale,
+        numero_di_telefono=alice.numero_di_telefono,
+        payment_method='paypal',
+        shipping_status='consegnato',
+    )
+    OrderItem.objects.create(order=order_alice, product=p_x670e, price=p_x670e.price, quantity=1)
+    OrderItem.objects.create(order=order_alice, product=p_ryzen5, price=p_ryzen5.price, quantity=1)
+
+    # 6. Charlie's Order (contains product, In Consegna)
+    order_charlie = Order.objects.create(
+        user=charlie,
+        first_name=charlie.first_name,
+        last_name=charlie.last_name,
+        email=charlie.email,
+        indirizzo=charlie.indirizzo,
+        citta=charlie.citta,
+        codice_postale=charlie.codice_postale,
+        numero_di_telefono=charlie.numero_di_telefono,
+        payment_method='transfer',
+        shipping_status='consegna',
+    )
+    OrderItem.objects.create(order=order_charlie, product=p_rx7900, price=p_rx7900.price, quantity=1)
 
     print("Creating Reviews...")
-    Review.objects.create(product=products_obj[4], user=bob, rating=5, comment='Processore eccezionale!') # 7800X3D
-    Review.objects.create(product=products_obj[4], user=bobby, rating=4, comment='Ottimo, ma scalda un po\'.')
-    Review.objects.create(product=products_obj[0], user=taylor, rating=5, comment='Un mostro di potenza.') # 14900K
-    Review.objects.create(product=products_obj[12], user=john, rating=5, comment='Prestazioni incredibili in 4K.') # 4080 Super
-    Review.objects.create(product=products_obj[10], user=bob, rating=1, comment='Ho sbagliato acquisto, non va sulla mia scheda madre nuova.') # DDR4
-    Review.objects.create(product=products_obj[1], user=john, rating=5, comment='Scheda madre top per LGA1700!') # ROG Z790
-    Review.objects.create(product=products_obj[15], user=taylor, rating=5, comment='RX 7900 XTX fantastica, nessun problema.') # 7900 XTX
-    Review.objects.create(product=products_obj[21], user=bobby, rating=5, comment='SSD Samsung super veloce, sistema si avvia in un lampo.') # 990 PRO
+    # Product 1: Ryzen 7 7800X3D Reviews 
+    Review.objects.create(product=p_ryzen, user=bob, rating=5, comment='Ottimo processore per il gaming con temperature molto basse.')
+    Review.objects.create(product=p_ryzen, user=bobby, rating=4, comment="Scalda un po' troppo... ma va bene")
+    Review.objects.create(product=p_ryzen, user=taylor, rating=5, comment='Assolutamente perfetto. Efficienza energetica mostruosa.')
+
+    # Product 2: NVIDIA GeForce RTX 4080 Super Reviews 
+    Review.objects.create(product=p_rtx4080, user=bob, rating=5, comment='Silenziosa a fresce, e fa girare tutto in 4K')
+    Review.objects.create(product=p_rtx4080, user=bobby, rating=5, comment='Rispetto alla mia vecchia 3050 è un bestione')
+    Review.objects.create(product=p_rtx4080, user=taylor, rating=4, comment='Scheda molto potente e top ma costa davvero tanto')
+
+    # Product 3: Samsung 990 PRO Reviews 
+    Review.objects.create(product=p_samsung990, user=bob, rating=5, comment='Super veloce ottima per caricamenti velocisissimi')
+    Review.objects.create(product=p_samsung990, user=bobby, rating=4, comment='Molto veloce ma scalda troppo... prendete un buon dissipatore')
+    Review.objects.create(product=p_samsung990, user=taylor, rating=3, comment='Ottimo SSD ma troppo costoso secondo me')
+
+    # Bob's other reviews
+    Review.objects.create(product=p_i9, user=bob, rating=5, comment='Prestazioni davvero altissime ma scalda parecchio, serve un buon dissipatore a liquido')
+    Review.objects.create(product=p_z790, user=bob, rating=5, comment='Scheda madre top di gamma, ovviamente si paga la qualità')
+    Review.objects.create(product=p_h9, user=bob, rating=5, comment='Design a doppia camera bellissimo. Mostra tutti i componenti ed ha un flusso eccezionale')
+
+    # Bobby's other reviews
+    Review.objects.create(product=p_b650, user=bobby, rating=4, comment='Buona scheda madre, ce ne sono di meglio in giro ma per il prezzo va benissimo')
+    Review.objects.create(product=p_ram_corsair, user=bobby, rating=2, comment='Costa davvero troppo')
+    Review.objects.create(product=p_pure_rock, user=bobby, rating=5, comment='Dissipatore ad aria eccellente. Molto silenzioso, mantiene il mio processore fresco anche sotto sforzo')
+    Review.objects.create(product=p_noctua, user=bobby, rating=5, comment='Il miglior dissipatore ad aria sul mercato. Dimensioni enormi ma prestazioni al top')
+
+    # Taylor's other reviews
+    Review.objects.create(product=p_i5, user=taylor, rating=5, comment='Miglior processore per rapporto qualità/prezzo del momento')
+    Review.objects.create(product=p_rx7800, user=taylor, rating=3, comment='Ottima scheda video per giocare in 1440p, ottima alternativa a Nvidia ma cmq costosetta')
+
+    # John's reviews
+    Review.objects.create(product=p_z790_p, user=john, rating=4, comment='Fa il suo dovere ma non aspettatevi miracoli')
+    Review.objects.create(product=p_ram_crucial, user=john, rating=4, comment='Classica ram, veloce ed economica')
+    Review.objects.create(product=p_crucial_p3, user=john, rating=5, comment='SSD eccellente ad un ottimo prezzo. Caricamenti velocissimi')
+
+    # Alice's reviews
+    Review.objects.create(product=p_x670e, user=alice, rating=5, comment='Scheda madre ottima per tutto')
+    Review.objects.create(product=p_ryzen5, user=alice, rating=5, comment='Migliore cpu che abbia mai comprato sinceramente')
+
+    # Charlie's reviews
+    Review.objects.create(product=p_rx7900, user=charlie, rating=1, comment='Terribile. non compratela')
 
     print("Database popolato con successo!")
 

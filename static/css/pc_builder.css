@@ -6,6 +6,17 @@
     margin-top: 1rem;
 }
 
+.builder-back-container {
+    margin-bottom: -1rem;
+    display: flex;
+    justify-content: flex-start;
+}
+
+.builder-back-container span {
+    margin-bottom: -0.1rem;
+    margin-left: -0.3rem;
+}
+
 .progress-tracker {
     display: flex;
     justify-content: space-between;

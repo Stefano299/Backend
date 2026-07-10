@@ -21,6 +21,11 @@
                         <a href="{% url 'orders:order_detail' order.id %}" class="order-id">Ordine #{{ order.id }}</a>
                         <span class="order-date">effettuato il {{ order.created|date:"d M Y H:i" }}</span>
                     </div>
+                    {% if order.shipping_status == 'consegnato' %}
+                        <span class="status-badge consegnato">Consegnato</span>
+                    {% else %}
+                        <span class="status-badge al-trasporto">{{ order.get_shipping_status_display }}</span>
+                    {% endif %}
                 </div>
                 
                 <div class="order-body">
