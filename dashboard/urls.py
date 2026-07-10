@@ -3,6 +3,8 @@ from . import views
 
 app_name = "dashboard"
 
+# Questa app gestisce solo la dashboard e non ha modelli o form... sarebbe potuta benissimo essere inglobata dalle app catalog
+# e orders, ma ho preferito così per ordine e chiarezza 
 urlpatterns = [
     # Manager Dashboard
     path("", views.ManagerDashboardView.as_view(), name="manager_dashboard"),

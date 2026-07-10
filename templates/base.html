@@ -20,6 +20,7 @@
         </button>
         <div class="nav-links" data-js="nav-links">
             <a href="/">Home</a>
+            <a href="{% url 'catalog:pc_builder_step' 1 %}">Assemblatore</a>
             <a href="{% url 'catalog:product_list' %}">Catalogo</a>
             <a href="{% url 'orders:cart_detail' %}">Carrello{% if cart|length > 0 %} <span class="cart-badge">({{ cart|length }})</span>{% endif %}</a>
             {% if user.is_authenticated %}

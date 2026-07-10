@@ -65,7 +65,7 @@ class ProductListView(ListView):
         
         # Calcola prezzo massimo prodotti nel database
         # Coalescence, prendendo il primo valore non nullo, prende disocunt price se presente, sennò quello normale
-        # Poi creo il campo virtuale active_price con annotate
+        # Poi creo il campo virtuale active_price con annotate()
         most_expensive_product = Product.objects.annotate(
             active_price=Coalesce('discount_price', 'price')
         ).order_by('-active_price').first()

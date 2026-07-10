@@ -4,6 +4,7 @@ from .models import DiscountCode, CartItem
 
 # Il carrello è un dizionario indicizzato sull'id dei prodotti che contiene la quantità e il prezzo
 # I prodotti vengono presi dal db quando si itera dal carrello
+# Il carrello è salvato in sessione per gli utenti non loggati. Dopo che fanno l'accesso viene salvato nel db
 class Cart:
     # Se non esiste, crea il dizionario cart
     def __init__(self, request):

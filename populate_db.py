@@ -76,7 +76,7 @@ def run():
     john = User.objects.create_user(username='john', password='john12345', email='john@demo.com')
     john.groups.add(customer_group)
     john.first_name = "John"
-    john.last_name = "Doe"
+    john.last_name = "Grigi"
     john.indirizzo = "Piazza Duomo 2"
     john.citta = "Milano"
     john.codice_postale = "20121"
@@ -283,7 +283,7 @@ def run():
             'description': 'Dissipatore a liquido AIO. Compatibile LGA1700 e AM5.',
             'price': Decimal('279.99'),
             'discount_price': Decimal('249.99'),
-            'stock': 6,
+            'stock': 0,
             'image': 'products/cooler.jpg',
             'categories': [cat_cooler],
         },

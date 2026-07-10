@@ -24,6 +24,7 @@ class DiscountCode(models.Model):
         from decimal import Decimal, ROUND_HALF_UP
         if self.discount_type == 'percentage':
             discount_val = (subtotal * self.amount) / Decimal('100')
+            # Mi assicuro vengano mostrate max due cifre decimali
             discount_val = discount_val.quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
             return min(subtotal, discount_val)
         return min(subtotal, self.amount)
