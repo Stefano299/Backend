@@ -499,9 +499,9 @@ def run():
 
     print("Creating Reviews...")
     # Product 1: Ryzen 7 7800X3D Reviews 
-    Review.objects.create(product=p_ryzen, user=bob, rating=5, comment='Ottimo processore per il gaming con temperature molto basse.')
+    Review.objects.create(product=p_ryzen, user=bob, rating=5, comment='Ottimo processore per il gaming con temperature molto basse')
     Review.objects.create(product=p_ryzen, user=bobby, rating=4, comment="Scalda un po' troppo... ma va bene")
-    Review.objects.create(product=p_ryzen, user=taylor, rating=5, comment='Assolutamente perfetto. Efficienza energetica mostruosa.')
+    Review.objects.create(product=p_ryzen, user=taylor, rating=5, comment='Assolutamente perfetto. Efficienza energetica bestiale')
 
     # Product 2: NVIDIA GeForce RTX 4080 Super Reviews 
     Review.objects.create(product=p_rtx4080, user=bob, rating=5, comment='Silenziosa a fresce, e fa girare tutto in 4K')
@@ -516,7 +516,7 @@ def run():
     # Bob's other reviews
     Review.objects.create(product=p_i9, user=bob, rating=5, comment='Prestazioni davvero altissime ma scalda parecchio, serve un buon dissipatore a liquido')
     Review.objects.create(product=p_z790, user=bob, rating=5, comment='Scheda madre top di gamma, ovviamente si paga la qualità')
-    Review.objects.create(product=p_h9, user=bob, rating=5, comment='Design a doppia camera bellissimo. Mostra tutti i componenti ed ha un flusso eccezionale')
+    Review.objects.create(product=p_h9, user=bob, rating=5, comment='Ottimo design... perfettamente tutti i componenti')
 
     # Bobby's other reviews
     Review.objects.create(product=p_b650, user=bobby, rating=4, comment='Buona scheda madre, ce ne sono di meglio in giro ma per il prezzo va benissimo')

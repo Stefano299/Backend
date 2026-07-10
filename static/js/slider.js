@@ -10,18 +10,21 @@ document.addEventListener('DOMContentLoaded', function() {
     if (minSlider && maxSlider && priceDisplay && track) {
         
         function updateSlider() {
-            const minVal = parseInt(minSlider.value);
-            const maxVal = parseInt(maxSlider.value);
+            let minVal = parseInt(minSlider.value);
+            let maxVal = parseInt(maxSlider.value);
             
-            // Impedisce che il pallino del minimo superi e vada a destra di quello del massimo
             if (minVal > maxVal) {
                 minSlider.value = maxVal;
+                minVal = maxVal;
             }
+            // Serve a rendere la barra tra i due pallini gialla anzichè grigia (il colore del background)
+            const maxLimit = parseInt(minSlider.max) || 1000;
+            const minPercent = (minVal / maxLimit) * 100;
+            const maxPercent = (maxVal / maxLimit) * 100;
             
-            const finalMin = minSlider.value;
-            const finalMax = maxSlider.value;
+            track.style.background = `linear-gradient(to right, #3f3f46 ${minPercent}%, #eab308 ${minPercent}%, #eab308 ${maxPercent}%, #3f3f46 ${maxPercent}%)`;
             
-            priceDisplay.textContent = `€${finalMin} - €${finalMax}`;
+            priceDisplay.textContent = `€${minVal} - €${maxVal}`;
         }
         
         // Aggiunge i listener per aggiornare lo slider ogni volta che l'utente sposta i range
