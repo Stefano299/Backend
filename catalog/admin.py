@@ -4,7 +4,7 @@ from .models import Product, Category, Review
 @admin.register(Product)
 class ProductAdmin(admin.ModelAdmin):
     # Attributi visualizzati nel summary
-    list_display = ('name', 'price', 'stock')
+    list_display = ('name', 'price', 'discount_price', 'stock')
     # Attributi per il filtro laterale
     list_filter = ('categories',)
     # Attributi per la barra di ricerca

@@ -382,8 +382,6 @@ def run():
         numero_di_telefono=bob.numero_di_telefono,
         payment_method='card',
         shipping_status='consegnato',
-        discount_code=dc_sconto10,
-        discount_amount=Decimal('174.99')
     )
     OrderItem.objects.create(order=order_bob, product=p_ryzen, price=p_ryzen.price, quantity=1)
     OrderItem.objects.create(order=order_bob, product=p_rtx4080, price=p_rtx4080.price, quantity=1)
@@ -459,8 +457,6 @@ def run():
         numero_di_telefono=john.numero_di_telefono,
         payment_method='card',
         shipping_status='consegnato',
-        discount_code=dc_welcome5,
-        discount_amount=Decimal('5.00')
     )
     OrderItem.objects.create(order=order_john, product=p_z790_p, price=p_z790_p.price, quantity=1)
     OrderItem.objects.create(order=order_john, product=p_ram_crucial, price=p_ram_crucial.price, quantity=1)

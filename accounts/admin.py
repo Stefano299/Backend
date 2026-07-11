@@ -14,7 +14,7 @@ class CustomUserAdmin(UserAdmin):
     )
     
     add_fieldsets = UserAdmin.add_fieldsets + (
-        ('Informazioni Aggiuntive', {'fields': ('indirizzo', 'citta', 'codice_postale', 'numero_di_telefono')}),
+        ('Informazioni Aggiuntive', {'fields': ('first_name', 'last_name', 'email', 'indirizzo', 'citta', 'codice_postale', 'numero_di_telefono')}),
     )
 
 admin.site.register(CustomUser, CustomUserAdmin)
