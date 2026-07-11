@@ -47,8 +47,8 @@ Questo progetto è un'applicazione web e-commerce dedicata alla vendita di compo
 1. **Clonare il repository:**
 
    ```bash
-   git clone https://github.com/Stefano299/Backend.git
-   cd Backend
+   git clone https://github.com/Stefano299/PC-Builder.git
+   cd PC-Builder
    ```
 
 2. **Creare e attivare l'ambiente virtuale:**
