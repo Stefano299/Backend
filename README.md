@@ -44,10 +44,6 @@ Questo progetto è un'applicazione web e-commerce dedicata alla vendita di compo
 
 ## Installazione ed esecuzione locale
 
-> [!IMPORTANT]
-> Il progetto richiede **Python 3.10, 3.11 o 3.12** ed è basato su **Django 4.2.11**.
-> Versioni di Python pari o superiori a **3.13** (inclusa la 3.14) non sono compatibili con Django 4.2 e causeranno errori di rendering nei template (es. `AttributeError: 'super' object has no attribute 'dicts'`).
-
 1. **Clonare il repository:**
 
    ```bash
@@ -150,6 +146,8 @@ Per verificare le funzionalità principali del progetto si suggeriscono i seguen
    - Procedere al pagamento come nel punto precedente.
 
 > **NOTA:** Il carrello è memorizzato nel database per gli utenti autenticati, mentre per gli utenti non autenticati è memorizzato nella sessione. Dopo che un utente non autenticato effettua il login, il carrello viene salvato nel database.
+
+> **NOTA:** Un utente può usare uno stesso codice sconto una sola volta..
 
 3. **Test Permessi:**
    - Con l'utente `bob` ancora connesso, provare ad accedere all'indirizzo della dashboard del manager (`http://127.0.0.1:8000/dashboard/`). L'applicazione impedirà l'accesso mostrando una pagina di errore per permessi insufficienti.
