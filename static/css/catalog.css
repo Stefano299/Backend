@@ -490,13 +490,13 @@
     display: flex;
     justify-content: center;
     align-items: center;
-    width: 40px;
-    height: 40px;
+    width: 54px;
+    height: 54px;
     background: #1a1a1a;
     border: 1px solid #27272a;
     color: #a1a1aa;
     text-decoration: none;
-    font-size: 0.9rem;
+    font-size: 1.2rem;
     font-weight: 600;
     transition: all 0.15s ease-in-out;
     border-radius: 2px;

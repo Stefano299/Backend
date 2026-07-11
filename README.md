@@ -74,7 +74,6 @@ Questo progetto è un'applicazione web e-commerce dedicata alla vendita di compo
    Se si vuole ricreare il database da zero:
 
    ```bash
-   # Rimuovere il file db.sqlite3 esistente, poi:
    python manage.py migrate
    python populate_db.py  # Per ripopolare i dati demo
    ```
