@@ -1,7 +1,7 @@
-# E-Commerce & PC Builder
+# PC Builder
 
-**Studente:** Stefano Marri Malacrida, matricola 7136241
-**Tipo di progetto (Project Type):** Full-Stack Web Application
+**Studente:** Stefano Marri Malacrida, matricola 7136241<br>
+**Tipo di progetto (Project Type):** Full-Stack Web Application e-commerce<br>
 **Framework utilizzato (Framework):** Django
 
 ## Descrizione del progetto
@@ -144,7 +144,7 @@ Per verificare le funzionalità principali del progetto si suggeriscono i seguen
    - Cliccare su "Assemblatore" nella barra di navigazione e completare tutti gli step selezionando un componente per ciascuna categoria.
    - Al termine, nella schermata di riepilogo finale della configurazione, cliccare su "Aggiungi tutto al carrello".
    - Procedere al pagamento come nel punto precedente.
-> **NOTA:** Il carrello è memorizzato nel database per gli utenti autenticati, mentre per gli utenti non autenticati è memorizzato nella sessione. Dopo che un utente non autenticato effettua il login, il carrello viene salvato nel database.
+     > **NOTA:** Il carrello è memorizzato nel database per gli utenti autenticati, mentre per gli utenti non autenticati è memorizzato nella sessione. Dopo che un utente non autenticato effettua il login, il carrello viene salvato nel database.
 
 3. **Test Permessi:**
    - Con l'utente `bob` ancora connesso, provare ad accedere all'indirizzo della dashboard del manager (`http://127.0.0.1:8000/dashboard/`). L'applicazione impedirà l'accesso mostrando una pagina di errore per permessi non sufficienti o reindirizzando alla home.
