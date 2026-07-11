@@ -13,8 +13,25 @@ class CustomUserAdmin(UserAdmin):
         ('Informazioni Aggiuntive', {'fields': ('indirizzo', 'citta', 'codice_postale', 'numero_di_telefono')}),
     )
     
-    add_fieldsets = UserAdmin.add_fieldsets + (
-        ('Informazioni Aggiuntive', {'fields': ('first_name', 'last_name', 'email', 'indirizzo', 'citta', 'codice_postale', 'numero_di_telefono')}),
+    add_fieldsets = (
+        (
+            None,
+            {
+                'classes': ('wide',),
+                'fields': (
+                    'username',
+                    'password1',
+                    'password2',
+                    'first_name',
+                    'last_name',
+                    'email',
+                    'indirizzo',
+                    'citta',
+                    'codice_postale',
+                    'numero_di_telefono',
+                ),
+            },
+        ),
     )
 
 admin.site.register(CustomUser, CustomUserAdmin)

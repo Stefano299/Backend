@@ -28,7 +28,7 @@
 }
 
 .hero-title {
-    font-size: 2.5rem;
+    font-size: 2.6rem;
     color: #f59e0b;
     margin: 0 0 1.2rem 0;
     letter-spacing: 2px;
@@ -42,7 +42,7 @@
 }
 
 .section-title {
-    font-size: 1.5rem;
+    font-size: 2.0rem;
     color: #f59e0b;
     margin-bottom: 0.5rem;
 }
@@ -55,6 +55,7 @@
 .section-desc {
     color: #71717a;
     margin-bottom: 2.5rem;
+    font-size: 1.2rem;
 }
 
 .product-grid-3 {
@@ -311,7 +312,7 @@
 
 .option-title {
     color: #f59e0b;
-    font-size: 1.3rem;
+    font-size: 1.8rem;
     margin: 0 0 1rem 0;
     text-transform: uppercase;
     letter-spacing: 1px;
@@ -319,7 +320,7 @@
 
 .option-text {
     color: #a1a1aa;
-    font-size: 0.95rem;
+    font-size: 1.2rem;
     line-height: 1.6;
     margin: 0 0 2rem 0;
     flex-grow: 1;
@@ -330,8 +331,8 @@
     background-color: transparent;
     color: #f59e0b;
     border: 1px solid #f59e0b;
-    padding: 0.7rem 1.5rem;
-    font-size: 0.95rem;
+    padding: 1rem 1.8rem;
+    font-size: 1.3rem;
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 1px;

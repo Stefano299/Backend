@@ -1,14 +1,14 @@
 # PC Builder
 
 **Studente:** Stefano Marri Malacrida, matricola 7136241<br>
-**Tipo di progetto (Project Type):** Full-Stack Web Application e-commerce<br>
-**Framework utilizzato (Framework):** Django
+**Tipo di progetto:** Full-Stack Web Application e-commerce<br>
+**Framework utilizzato:** Django
 
 ## Descrizione del progetto
 
 Questo progetto è un'applicazione web e-commerce dedicata alla vendita di componenti hardware per computer, con una funzionalità aggiuntiva che guida passo dopo passo l'utente nella costruzione di un PC con componenti compatibili tra loro. Gli utenti possono navigare nel catalogo, utilizzare l'assemblatore guidato, gestire il carrello, applicare codici sconto, lasciare recensioni sui prodotti acquistati e completare e tracciare i propri ordini. È inoltre presente una dashboard gestionale dedicata allo Store Manager per la gestione di prodotti, categorie, ordini, recensioni e codici sconto.
 
-> **NOTA:** L'assemblatore guidato simula la compabilità rilevando delle parole nel nome dei prodotti. Ovviamente non è realistico e non si troverebbe mai in un reale sito di vendita di componenti, ma è implementato a scopo puramente dimostrativo.
+> **NOTA:** L'assemblatore guidato simula la compabilità rilevando delle parole nel nome dei prodotti. Ovviamente non è realistico e non si troverebbe mai in un reale sito di vendita di componenti, ma è implementato a scopo dimostrativo.
 
 ## Funzionalità principali per ruolo
 
@@ -16,7 +16,7 @@ Questo progetto è un'applicazione web e-commerce dedicata alla vendita di compo
 
 - Esplorazione del catalogo prodotti con ricerca per nome, filtri per categoria e prezzo, e ordinamento secondo più criteri.
 - Visualizzazione dei dettagli dei prodotti e delle recensioni lasciate dagli altri utenti.
-- Utilizzo del PC Builder (configuratore guidato) per creare un PC con componenti compatibili tra loro.
+- Utilizzo dell'assemblatore guidato per creare un PC con componenti compatibili tra loro.
 - Gestione del carrello salvato nella sessione; una volta effettuato il login, il carrello verrà salvato nel database e sarà accessibile anche da altri dispositivi con lo stesso account.
 - Registrazione di un nuovo account e login.
 
@@ -98,9 +98,9 @@ Il database è già pre-popolato con:
 - Ordini effettuati dai clienti, di cui si può accedere ai dettagli in una pagina dedicata.
 - Gli account utente elencati di seguito.
 
-## Account Demo per i test
+## Account Demo
 
-Di seguito sono riportate le credenziali degli utenti creati appositamente per testare l'applicazione:
+Di seguito sono riportate le credenziali degli utenti creati per testare l'applicazione:
 
 - **Amministratore (Superuser):**
   - **Username:** `admin`
@@ -126,18 +126,19 @@ Di seguito sono riportate le credenziali degli utenti creati appositamente per t
 L'applicazione è pubblicata online al seguente indirizzo:
 **https://backend-naap.onrender.com/**
 
-## Scenario di test consigliato (Browser)
+## Scenario di test consigliato
 
 Per verificare le funzionalità principali del progetto si suggeriscono i seguenti test:
 
 1. **Test Cliente (Catalogo):**
-   - Aprire il sito e navigare nel catalogo prodotti.
+   - Andare nel catalogo prodotti.
    - Cercare e selezionare un prodotto di proprio interesse.
-   - Aggiungere il prodotto al carrello direttamente dalla pagina dei dettagli.
-   - Andare al carrello, inserire il codice sconto `SCONTO10` nell'apposito campo e cliccare su "Applica Sconto" per verificare il ricalcolo del prezzo totale (con detrazione del 10%).
-   - Cliccare su "Procedi al Checkout" ed effettuare il login con le credenziali di un cliente (ad esempio `bob` / `bob12345`).
-   - Inserire i dati di spedizione nella pagina di checkout e confermare l'ordine.
-   - Andare nella pagina "I Miei Ordini" (dal menu utente) per visualizzare l'ordine appena creato e lo stato "Ordine ricevuto".
+   - Aggiungere il prodotto al carrello dalla pagina dei dettagli.
+   - Effettuare il login con le credenziali di un cliente (ad esempio `bob` / `bob12345`).
+   - Nel carrello, inserire il codice sconto `SCONTO10` nell'apposito campo e cliccare su "Applica Sconto".
+   - Cliccare su "Procedi al Pagamento".
+   - Inserire i dati di spedizione nella pagina di checkout e completare l'ordine.
+   - Andare nella pagina "I Miei Ordini" per visualizzare l'ordine appena creato e lo stato "Ordine ricevuto".
    - Lasciare una recensione (voto in stelle e commento) sul prodotto acquistato.
 
 2. **Test Cliente (Assemblatore):**
@@ -147,7 +148,7 @@ Per verificare le funzionalità principali del progetto si suggeriscono i seguen
 
 > **NOTA:** Il carrello è memorizzato nel database per gli utenti autenticati, mentre per gli utenti non autenticati è memorizzato nella sessione. Dopo che un utente non autenticato effettua il login, il carrello viene salvato nel database.
 
-> **NOTA:** Un utente può usare uno stesso codice sconto una sola volta..
+> **NOTA:** Un utente può usare uno stesso codice sconto una sola volta.
 
 3. **Test Permessi:**
    - Con l'utente `bob` ancora connesso, provare ad accedere all'indirizzo della dashboard del manager (`http://127.0.0.1:8000/dashboard/`). L'applicazione impedirà l'accesso mostrando una pagina di errore per permessi insufficienti.
