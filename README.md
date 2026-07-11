@@ -157,3 +157,8 @@ Per verificare le funzionalità principali del progetto si suggeriscono i seguen
    - Andare alla dashboard gestionale tramite l'apposito link nel menu o inserendo l'URL `/dashboard/`.
    - Nella sezione "Ordini", individuare l'ordine effettuato da `bob` nei punti precedenti, cliccare su "Modifica" e cambiare lo stato di spedizione.
    - Effettuare il logout, accedere nuovamente come `bob` ed andare sulla pagina "I Miei Ordini" per verificare che lo stato dell'ordine sia effettivamente aggiornato.
+
+## Uso dell'intelligenza artificiale
+
+Ho utilizzato l'intelligenza artificiale soprattutto per generare i test e lo script per popolare il database.
+Inoltre la ho usata per aiutarmi durante lo sviluppo, specialmente nel frontend.
