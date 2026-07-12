@@ -69,12 +69,12 @@ Questo progetto è un'applicazione web e-commerce dedicata alla vendita di compo
    pip install -r requirements.txt
    ```
 
-4. **Configurare il database:**
+4. **Configurare il database(OPZIONALE):**
    Nel repository è già incluso il database pre-popolato `db.sqlite3`. Non è necessario eseguire le migrazioni o creare un superuser da zero, a meno che non si voglia ricominciare da un database vuoto.
    Se si vuole ricreare il database da zero:
 
    ```bash
-   python manage.py migrate
+   python manage.py migrate  # Dopo aver eliminato il file db.sqlite3
    python populate_db.py  # Per ripopolare i dati demo
    ```
 
